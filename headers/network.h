@@ -1,7 +1,7 @@
 /**
  * @file network.h
- * @author Niklas Seppälä (you@domain.com)
- * @brief 
+ * @author Niklas Seppälä
+ * @brief C module for creating and handling sockets.
  * @version 0.1
  * @date 2021-01-22
  * 
@@ -12,7 +12,7 @@
 #if !defined NETWORK_H
 #define NETWORK_H
 
-struct readble_addr {
+struct readable_addr {
     char port[16];
     char ip_addr[INET6_ADDRSTRLEN];
 };
@@ -22,9 +22,8 @@ struct readble_addr {
  *         socket address. Works with both IPV4/IPV6.
  *         ALLOCATES HEAP MEMORY!
  * 
- * @param sock 
- * @param generic_addr 
- * @return struct sockaddr* 
+ * @param sock socket file descriptor
+ * @return struct sockaddr* pointer to generic sockaddr in
  */
 struct sockaddr *generic_addr(const int sock);
 
@@ -40,14 +39,15 @@ struct sockaddr *generic_addr(const int sock);
 int server_socket(const char *service, int queue_size,
     int socktype, int protocol);
 
-
 /**
  * @brief Copies address and port to readable address
- *        struct. ALLOCATES HEAP MEMORY!
+ *        struct.
  * 
- * @param address generic address struct.
- * @return struct addr_text* pointer to readable struct located in heap
+ * @param address generic address struct ptr
+ * @param result readable address struct ptr
+ * @return return code
  */
-struct readble_addr *addr_to_readable(const struct sockaddr * address);
+int addr_to_readable(const struct sockaddr *address,
+    struct readable_addr *result);
 
 #endif
