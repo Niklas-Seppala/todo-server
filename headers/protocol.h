@@ -1,34 +1,53 @@
 /**
  * @file protocol.h
- * @author Niklas Seppälä (you@domain.com)
- * @brief TODO: EXPLAIN
+ * @author Niklas Seppälä
+ * @brief C module for working with custom made data transfer protocol.
+ *        Protocol utilizes TCP/IP protocol.
  * 
- *  HEADER [
- *      size = 16-bytes
- *      COMMAND      [ size = 2-bytes  ] ushort
- *      SENDER       [ size = 12-bytes ] char buffer
- *      CONTENT-SIZE [ size = 2-bytes  ] ushort
- *  ]
- * 
- *  CONTENT [
- *      size = defined in CONTENT-SIZE
- * ]
- * 
+ *        Communication starts with header package:
+ *          Header package:
+ *              size : 16-bytes
+ *              COMMAND
+ *                  use    : describe what is the purpose
+ *                           of the message.
+ *                           @see enum CMD
+ *                  type   : uint16_t
+ *                  size   : 2 bytes
+ *                  offset : 0
+ *              SENDER
+ *                  use    : Identify sender
+ *                  type   : byte buffer
+ *                  size   : 12 bytes
+ *                  offset : 2
+ *              CONTENT-SIZE
+ *                  use    : inform the receiver the size
+ *                           of the main package.
+ *                  type   : uint16_t
+ *                  size   : 2 bytes
+ *                  offset : 14
+ *        And the main content package is sent (if desired)
+ *        after confirmation from receiver:
+ *          Main package:
+ *              type : byte buffer
+ *              size : defined in header
  * @version 0.1
- * @date 2021-01-21
+ * @date 2021-01-22
  */
 
 #if !defined PROTOCOL_H
 #define PROTOCOL_H
 #include <stdint.h>
 
-
+/**
+ * @brief Command enum value is a sum
+ *        of it's char representation
+ */
 enum CMD {
     INV = 0xEd,
     ADD = 0xC9,
     LOG = 0xE2,
     RMV = 0xF5,
-    OK  = 0x9A
+    OK  = 0x9A,
 };
 
 #define CMD_INV "INV"
@@ -38,11 +57,18 @@ enum CMD {
 #define CMD_OK "OK"
 
 #define HEADER_SIZE 16
-#define H_SENDER_SIZE 12
+#define SENDER_SIZE 12
 
+/**
+ * @brief header package with
+ *        protocol correct size and
+ *        data alignment. Can be sent over
+ *        socket as is.
+ * 
+ */
 struct header {
     uint16_t cmd;
-    char sender[H_SENDER_SIZE];
+    char sender[SENDER_SIZE];
     uint16_t size;
 };
 
@@ -55,7 +81,8 @@ struct header {
  * @param content_size length of the content string.
  * @return int SUCCESS if OK
  */
-int create_header(struct header *header, uint8_t cmd, char *sender, uint8_t content_size);
+int create_header(struct header *header, uint16_t cmd,
+    char *sender, uint16_t content_size);
 
 /**
  * @brief Cast protocol header to char pointer

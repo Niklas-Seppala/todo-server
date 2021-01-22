@@ -41,7 +41,6 @@ char *enum_to_str(int cmd) {
     return result;
 }
 
-
 struct header *read_header(char *buffer) {
     struct header *header = (struct header*) buffer;
     header->cmd = ntohs(header->cmd);
@@ -55,13 +54,12 @@ char * header_to_network(struct header *header) {
     return (char *)header;
 }
 
-int create_header(struct header *header, uint8_t cmd, char *sender, uint8_t content_size) {
+int create_header(struct header *header, uint16_t cmd, char *sender, uint16_t content_size) {
     memset(header, 0, sizeof(struct header));
     header->cmd = cmd;
     header->size = content_size;
-    if (strlen(sender) > H_SENDER_SIZE)
+    if (strlen(sender) > SENDER_SIZE)
         return ERROR;
-    strncpy(header->sender, sender, H_SENDER_SIZE);
+    strncpy(header->sender, sender, SENDER_SIZE);
     return SUCCESS;
 }
-
