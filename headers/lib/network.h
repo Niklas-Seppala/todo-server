@@ -13,6 +13,8 @@
 #define NETWORK_H
 #include <arpa/inet.h>
 
+#define SOCKET int
+
 /**
  * @brief port is uint16, so
  *        max 5 chars
