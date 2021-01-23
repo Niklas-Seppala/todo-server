@@ -42,16 +42,25 @@ char *enum_to_str(int cmd) {
 }
 
 struct header *read_header(char *buffer) {
-    struct header *header = (struct header*) buffer;
-    header->cmd = ntohs(header->cmd);
-    header->size = ntohs(header->size);
-    return header;
+    // Read the buffer as header struct
+    struct header *temp = (struct header*) buffer;
+
+    // Correct endianness
+    temp->cmd = ntohs(temp->cmd);
+    temp->size = ntohs(temp->size);
+
+    // Copy buffer content to heap allocated
+    // struct and return pointer.
+    size_t size = sizeof(struct header);
+    struct header *copy = malloc(size);
+    memcpy(copy, temp, size);
+    return copy;
 }
 
-char * header_to_network(struct header *header) {
+void header_to_network(struct header *header) {
+    // Correct endianness
     header->cmd = htons(header->cmd);
     header->size = htons(header->size);
-    return (char *)header;
 }
 
 int create_header(struct header *header, uint16_t cmd, char *sender, uint16_t content_size) {

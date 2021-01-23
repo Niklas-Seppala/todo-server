@@ -3,64 +3,28 @@
 #include <string.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 
 #include "common.h"
 #include "network.h"
 
-struct sockaddr *generic_addr(const int sock) {
-    // Allocate enough memory for both ipv4 and ipv6
+
+struct sockaddr *generic_peer_addr(const int sock) {
     socklen_t size = sizeof(struct sockaddr_storage);
     struct sockaddr_storage *storage = malloc(size);
-
-    // get socket info stored to storage.
-    getsockname(sock, ((struct sockaddr *)storage), &size);
-
-    // Cast storage to generic sockaddr struct
+    getpeername(sock, (struct sockaddr *)storage, &size);
     return (struct sockaddr *)storage;
 }
 
-int server_socket(const char *service, int queue_size,
-    int socktype, int protocol) {
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(struct addrinfo));
-
-    // Specify what kind of socket we want.
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_flags = AI_PASSIVE;
-    hints.ai_socktype = socktype;
-    hints.ai_protocol = protocol;
-
-    // Get address info linked list
-    struct addrinfo *head;
-    int rc = getaddrinfo(NULL, service, &hints, &head);
-    if (rc != 0) {
-        // TODO: error handling
-        printf("%s\n", gai_strerror(rc));
-    }
-
-    int sock = -1;
-    for (struct addrinfo *node = head; node != NULL; node = node->ai_next) {
-        sock = socket(node->ai_family, node->ai_socktype, node->ai_protocol);
-        if (sock < 0) {
-            // Socket creation failed, try next node ->
-            continue;
-        }
-        // Socket created, try setup
-        if ((bind(sock, node->ai_addr, node->ai_addrlen) == 0) &&
-            listen(sock, queue_size) == 0) {
-            // Socket is ready.
-            break;
-        }
-        // Failed, try next ->
-        close(sock);
-        sock = -1;
-    }
-    freeaddrinfo(head);
-    return sock;
+struct sockaddr *generic_addr(const int sock) {
+    socklen_t size = sizeof(struct sockaddr_storage);
+    struct sockaddr_storage *storage = malloc(size);
+    getsockname(sock, (struct sockaddr *)storage, &size);
+    return (struct sockaddr *)storage;
 }
 
-int addr_to_readable(const struct sockaddr * address,
+int addr_to_readable(const struct sockaddr *address,
     struct readable_addr *result) {
     void *bin_addr;
 
@@ -91,3 +55,77 @@ int addr_to_readable(const struct sockaddr * address,
     );
     return SUCCESS;
 }
+
+int server_socket(const char *service, int queue_size) {
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(struct addrinfo));
+
+    // Specify what kind of socket we want.
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    // Get address info linked list
+    struct addrinfo *head;
+    int rc = getaddrinfo(NULL, service, &hints, &head);
+    if (rc != 0) {
+        // TODO: error handling
+        printf("%s\n", gai_strerror(rc));
+        return -1;
+    }
+
+    int sock = -1;
+    for (struct addrinfo *node = head; node != NULL; node = node->ai_next) {
+        sock = socket(node->ai_family, node->ai_socktype, node->ai_protocol);
+        if (sock < 0) {
+            // Socket creation failed, try next node ->
+            continue;
+        }
+        // Socket created, try setup
+        if ((bind(sock, node->ai_addr, node->ai_addrlen) == 0) &&
+            listen(sock, queue_size) == 0) {
+            // Socket is ready.
+            break;
+        }
+        // Failed, try next ->
+        close(sock);
+        sock = -1;
+    }
+    freeaddrinfo(head);
+    return sock;
+}
+
+int client_socket(const char *host, const char *service) {
+    // Specify what kind of socket we want.
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    // Get address infos based on hostname and service.
+    struct addrinfo *head;
+    int ret_val = getaddrinfo(host, service, &hints, &head);
+    if (ret_val != 0) {
+        // TODO: handle error
+        return -1;
+    }
+
+    // Search working address from linked address list.
+    int sock = -1;
+    for (struct addrinfo *node = head; node != NULL; node = node->ai_next)
+    {
+        // Create a socket based on address info node and connect it.
+        sock = socket(node->ai_family, node->ai_socktype, node->ai_protocol);
+        if (sock >= 0 && connect(sock, node->ai_addr, node->ai_addrlen) == 0)
+            break; // success
+
+        // Socket creation failed, close and continue.
+        close(sock);
+        sock = -1;
+    }
+    freeaddrinfo(head);
+    return sock;
+}
+
