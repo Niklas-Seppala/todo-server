@@ -1,5 +1,6 @@
 **/out
 **/obj
+**/logs
 **/.vscode
 *dev*
 **.o
