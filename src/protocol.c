@@ -1,9 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <arpa/inet.h>
-#include "common.h"
-#include "protocol.h"
+
+#include "lib/common.h"
+#include "lib/protocol.h"
 
 static const int CMD_STR_LEN = 3;
 
