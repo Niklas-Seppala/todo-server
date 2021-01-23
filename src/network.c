@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "io.h"
 #include "common.h"
 #include "network.h"
-
 
 struct sockaddr *generic_peer_addr(const int sock) {
     socklen_t size = sizeof(struct sockaddr_storage);
@@ -70,9 +70,8 @@ int server_socket(const char *service, int queue_size) {
     struct addrinfo *head;
     int rc = getaddrinfo(NULL, service, &hints, &head);
     if (rc != 0) {
-        // TODO: error handling
-        printf("%s\n", gai_strerror(rc));
-        return -1;
+        error(NULL, FATAL | SYS_ERROR);
+        return ERROR;
     }
 
     int sock = -1;
@@ -108,8 +107,8 @@ int client_socket(const char *host, const char *service) {
     struct addrinfo *head;
     int ret_val = getaddrinfo(host, service, &hints, &head);
     if (ret_val != 0) {
-        // TODO: handle error
-        return -1;
+        error(NULL, SYS_ERROR | FATAL);
+        return ERROR;
     }
 
     // Search working address from linked address list.

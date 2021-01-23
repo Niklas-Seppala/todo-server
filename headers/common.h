@@ -1,7 +1,7 @@
 #if !defined COMMON_H
 #define COMMON_H
 
-#define ERROR 0
+#define ERROR -1
 #define SUCCESS 1
 #define FATAL 1
 
