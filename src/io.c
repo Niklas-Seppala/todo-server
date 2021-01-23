@@ -4,8 +4,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "io.h"
-#include "common.h"
+#include "lib/io.h"
+#include "lib/common.h"
 
 extern int errno;
 static const char *debug_err_header =
