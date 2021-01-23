@@ -1,14 +1,11 @@
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <string.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "io.h"
-#include "common.h"
-#include "network.h"
+#include "lib/io.h"
+#include "lib/common.h"
+#include "lib/network.h"
 
 struct sockaddr *generic_peer_addr(const int sock) {
     socklen_t size = sizeof(struct sockaddr_storage);
@@ -17,7 +14,7 @@ struct sockaddr *generic_peer_addr(const int sock) {
     return (struct sockaddr *)storage;
 }
 
-struct sockaddr *generic_addr(const int sock) {
+struct sockaddr *generic_addr(const SOCKET sock) {
     socklen_t size = sizeof(struct sockaddr_storage);
     struct sockaddr_storage *storage = malloc(size);
     getsockname(sock, (struct sockaddr *)storage, &size);
@@ -127,4 +124,3 @@ int client_socket(const char *host, const char *service) {
     freeaddrinfo(head);
     return sock;
 }
-

@@ -12,6 +12,8 @@
 #if !defined NETWORK_H
 #define NETWORK_H
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #define SOCKET int
 
@@ -38,7 +40,7 @@ struct readable_addr {
  * @param sock socket file descriptor
  * @return struct sockaddr* pointer to generic sockaddr in heap
  */
-struct sockaddr *generic_addr(const int sock);
+struct sockaddr *generic_addr(const SOCKET sock);
 
 /**
  * @brief Get socket address of the peer as generic
@@ -48,7 +50,7 @@ struct sockaddr *generic_addr(const int sock);
  * @param sock socket
  * @return struct sockaddr* pointer to generic sockaddr in heap
  */
-struct sockaddr *generic_peer_addr(const int sock);
+struct sockaddr *generic_peer_addr(const SOCKET sock);
 
 /**
  * @brief Creates a ready to use server socket.
