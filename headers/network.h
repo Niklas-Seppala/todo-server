@@ -11,9 +11,20 @@
 
 #if !defined NETWORK_H
 #define NETWORK_H
+#include <arpa/inet.h>
 
+/**
+ * @brief port is uint16, so
+ *        max 5 chars
+ */
+#define PORT_LEN 5
+
+/**
+ * @brief Readable sockaddr fields
+ *        for bot ipv4 and ipv6
+ */
 struct readable_addr {
-    char port[16];
+    char port[PORT_LEN];
     char ip_addr[INET6_ADDRSTRLEN];
 };
 
@@ -23,21 +34,37 @@ struct readable_addr {
  *         ALLOCATES HEAP MEMORY!
  * 
  * @param sock socket file descriptor
- * @return struct sockaddr* pointer to generic sockaddr in
+ * @return struct sockaddr* pointer to generic sockaddr in heap
  */
 struct sockaddr *generic_addr(const int sock);
+
+/**
+ * @brief Get socket address of the peer as generic
+ *         socket address. Works with both IPV4/IPV6.
+ *         ALLOCATES HEAP MEMORY!
+ * 
+ * @param sock socket
+ * @return struct sockaddr* pointer to generic sockaddr in heap
+ */
+struct sockaddr *generic_peer_addr(const int sock);
 
 /**
  * @brief Creates a ready to use server socket.
  * 
  * @param service port/servicename
  * @param queue_size max queue size
- * @param socktype STREAM / DGRAM
- * @param protocol TCP / UPD
  * @return int socket file descriptor
  */
-int server_socket(const char *service, int queue_size,
-    int socktype, int protocol);
+int server_socket(const char *service, int queue_size);
+
+/**
+ * @brief Creates a ready to use client socket.
+ * 
+ * @param host name of the host
+ * @param service service name / port
+ * @return int socket file descriptor
+ */
+int client_socket(const char *host, const char *service);
 
 /**
  * @brief Copies address and port to readable address

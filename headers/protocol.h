@@ -54,7 +54,7 @@ enum CMD {
 #define CMD_ADD "ADD"
 #define CMD_LOG "LOG"
 #define CMD_RMV "RMV"
-#define CMD_OK "OK"
+#define CMD_OK  "OK"
 
 #define HEADER_SIZE 16
 #define SENDER_SIZE 12
@@ -85,16 +85,16 @@ int create_header(struct header *header, uint16_t cmd,
     char *sender, uint16_t content_size);
 
 /**
- * @brief Cast protocol header to char pointer
- *        after setting network endianness.
+ * @brief Sets network endianness.
  * 
  * @param header header struct
  */
-char * header_to_network(struct header *header);
+void header_to_network(struct header *header);
 
 /**
- * @brief Casts network buffer to header struct
- *        and corrects endianness.
+ * @brief Copies the buffer contents to header struct
+ *        and return a pointer. Buffer remains the same.
+ *        ALLOCATES HEAP MEMORY!
  * 
  * @param buffer network buffer, same size as header struct.
  * @return struct header* Pointer to header struct
