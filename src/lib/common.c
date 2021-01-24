@@ -1,6 +1,7 @@
-#include "common.h"
 #include <stdlib.h>
 #include <assert.h>
+
+#include "lib/common.h"
 
 void safe_free(void **ptr) {
     assert(ptr);

@@ -12,7 +12,9 @@ static const char *debug_err_header =
     "[ERROR] in function: %s()\n\t\t" \
     "at file:   %s\n\t\t" \
     "at line:   %d\n";
+#ifndef DEBUG
 static const char *err_header = "[ERROR] ";
+#endif // !DEBUG
 static const char *err_format = "\t\t%s\n";
 
 char *time_str(void) {

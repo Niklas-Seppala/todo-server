@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 
 #include "lib/common.h"
 #include "lib/protocol.h"

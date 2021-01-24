@@ -22,9 +22,9 @@
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-const FILE *IN_STREAM;
-const FILE *ERR_STREAM;
-const FILE *OUT_STREAM;
+FILE *IN_STREAM;
+FILE *ERR_STREAM;
+FILE *OUT_STREAM;
 
 /**
  * @brief Print error message with source info.

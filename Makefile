@@ -1,38 +1,28 @@
 CC=gcc
 DEBUG=-g -DDEBUG
 OFLAGS=-Wall -Wshadow -c
-OBJ=./obj/
-OUT=./out/
-SRC=./src/
 HEADERS=-Iheaders
 
-dev_server: common.o io.o protocol.o dev_server.o network.o
-	$(CC) common.o io.o dev_server.o protocol.o network.o -o dev_server
-	mv ./*.o $(OBJ)
-	mv ./dev_server $(OUT)
+OBJ=./obj/
+OUT=./out/
 
-dev_protocol: common.o io.o protocol.o dev_console.o
-	$(CC) common.o io.o dev_console.o protocol.o -o dev_protocol
-	mv ./*.o $(OBJ)
-	mv ./dev_protocol $(OUT)
+LIB_SRC=./src/lib/
 
-dev_network: common.o io.o network.o protocol.o dev_console.o
-	$(CC) common.o io.o protocol.o dev_console.o network.o -o dev_network
-	mv ./*.o $(OBJ)
-	mv ./dev_network $(OUT)
+LIB=$(LIB_SRC)common.c $(LIB_SRC)io.c $(LIB_SRC)protocol.c $(LIB_SRC)network.c
 
-io.o:
-	$(CC) $(OFLAGS) -g $(HEADERS) -DDEBUG $(SRC)io.c
-common.o:
-	$(CC) $(OFLAGS) -g $(HEADERS) -DDEBUG $(SRC)common.c
-network.o:
-	$(CC) $(OFLAGS) -g $(HEADERS) -DDEBUG $(SRC)network.c
-dev_console.o:
-	$(CC) $(OFLAGS) -g $(HEADERS) -DDEBUG $(SRC)dev_console.c
-dev_server.o:
-	$(CC) $(OFLAGS) -g $(HEADERS) -DDEBUG $(SRC)dev_server.c
-protocol.o:
-	$(CC) $(OFLAGS) -g $(HEADERS) -DDEBUG $(SRC)protocol.c
+SERVER_SRC=./src/server/
+SERVER=$(SERVER_SRC)app.c $(SERVER_SRC)flow.c $(SERVER_SRC)server_IO.c
+SERVER_OBJS=common.o io.o protocol.o network.o app.o flow.o server_IO.o
+
+server_app: lib.o server.o
+	$(CC) $(SERVER_OBJS) -o app
+	mv ./*.o $(OBJ)
+	mv ./app $(OUT)
+
+server.o:
+	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) $(SERVER)
+lib.o:
+	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) $(LIB)
 
 clean:
 	rm $(OBJ)* $(OUT)* *.o
