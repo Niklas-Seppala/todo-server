@@ -53,7 +53,8 @@ int addr_to_readable(const struct sockaddr *address,
     return SUCCESS;
 }
 
-int server_socket(const char *service, int queue_size) {
+int server_socket(const char *service, int queue_size,
+    struct sockaddr_storage *out_addr) {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -67,7 +68,7 @@ int server_socket(const char *service, int queue_size) {
     struct addrinfo *head;
     int rc = getaddrinfo(NULL, service, &hints, &head);
     if (rc != 0) {
-        log_error(NULL, FATAL | SYS_ERROR);
+        log_error(gai_strerror(rc), 0);
         return ERROR;
     }
 
@@ -81,6 +82,9 @@ int server_socket(const char *service, int queue_size) {
         // Socket created, try setup
         if ((bind(sock, node->ai_addr, node->ai_addrlen) == 0) &&
             listen(sock, queue_size) == 0) {
+            if (out_addr) {
+                memcpy(out_addr, node->ai_addr, node->ai_addrlen);
+            }
             // Socket is ready.
             break;
         }

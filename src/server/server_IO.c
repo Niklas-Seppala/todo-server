@@ -15,13 +15,12 @@ int config_server_io(void) {
     LOG_STREAM = err_log;
     OUT_STREAM = stdout;
     IN_STREAM = stdin;
-
     return SUCCESS;
 }
 
 int validate_args(int argc, const char **argv) {
     if (argc < 2) {
-        fprintf(stdout, "%s, %s <PORT>\n",
+        fprintf(stdout, "%s\n\t %s <PORT>\n",
             "Invalid parameter count", *argv);
         return ERROR;
     }

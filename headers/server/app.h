@@ -1,11 +1,12 @@
-#include "lib/network.h"
+#ifndef APP_H
+#define APP_H
 
-#if !defined(INSTANCE_H)
-#define INSTANCE_H
+#include "lib/network.h"
 
 #define SERVER_QUEUE_SIZE 5
 
-SOCKET SERVER_SOCK = -1;
-SOCKET CLIENT_SOCK = -1;
+SOCKET SERVER_SOCK;
+SOCKET CLIENT_SOCK;
+struct sockaddr *SERVER_ADDRESS;
 
-#endif // INSTANCE_H
+#endif // APP_H

@@ -61,7 +61,7 @@ void error(const char *funcname, const char *filename,
  * 
  * @param info info message
  */
-void log_info(char *info);
+void log_info(const char *info);
 
 /**
  * @brief Get the time str object

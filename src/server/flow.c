@@ -8,37 +8,44 @@
 #include "server/app.h"
 
 static void cleanup(void) {
-    fclose(LOG_STREAM);
-    fclose(IN_STREAM);
-    fclose(OUT_STREAM);
+    log_info("Cleaning up...");
+    safe_free((void **)&SERVER_ADDRESS);
 
     close(SERVER_SOCK);
     close(CLIENT_SOCK);
+
+    fclose(IN_STREAM);
+    fclose(OUT_STREAM);
+
+    log_info("Cleanup complete.");
+    fclose(LOG_STREAM);
 }
 
 void signal_handler(int sig) {
     if (sig == SIGINT) {
-        // TODO: log signal
+        log_info("Received signal: [SIGINT] Server shutting down!");
         cleanup();
-        return;
-    }
-    if (sig == SIGQUIT) {
-        // TODO: log signal
-        cleanup();
-        return;
+        exit(EXIT_SUCCESS);
     }
 }
 
 int init_connection(const char *port) {
-    SERVER_SOCK = server_socket(port, SERVER_QUEUE_SIZE);
+    struct sockaddr_storage *server_address = calloc(1,
+        sizeof(struct sockaddr_storage));
+    SERVER_SOCK = server_socket(port, SERVER_QUEUE_SIZE, server_address);
     if (SERVER_SOCK < 0) {
-        log_error(NULL, SYS_ERROR);
+        safe_free((void **)&server_address);
+        log_error("Could not create valid server socket", 0);
         return ERROR;
     }
+    SERVER_ADDRESS = (struct sockaddr *)server_address;
     return SUCCESS;
 }
 
-int shutdown_server(int r_code) {
+int shutdown_server(const int r_code, const char *log) {
+    if (log) {
+        log_info(log);
+    }
     cleanup();
     exit(r_code);
 }

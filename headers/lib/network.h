@@ -59,7 +59,8 @@ struct sockaddr *generic_peer_addr(const SOCKET sock);
  * @param queue_size max queue size
  * @return int socket file descriptor
  */
-int server_socket(const char *service, int queue_size);
+int server_socket(const char *service, int queue_size,
+    struct sockaddr_storage *out_addr);
 
 /**
  * @brief Creates a ready to use client socket.

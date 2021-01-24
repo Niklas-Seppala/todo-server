@@ -31,7 +31,7 @@ void io_config(FILE *error, FILE *out, FILE *in) {
     IN_STREAM = in;
 }
 
-void log_info(char *info) {
+void log_info(const char *info) {
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - [INFO]: %s\n", t_str, info);
     fflush(LOG_STREAM);
