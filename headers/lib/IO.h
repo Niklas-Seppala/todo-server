@@ -64,6 +64,13 @@ void error(const char *funcname, const char *filename,
 void log_info(const char *info);
 
 /**
+ * @brief prints warning message with timestamp to LOG_STREAM.
+ * 
+ * @param warn warning message
+ */
+void log_warn(const char *warn);
+
+/**
  * @brief Get the time str object
  * 
  * @return char* pointer to string containing datetime
