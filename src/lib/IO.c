@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "lib/io.h"
+#include "lib/IO.h"
 #include "lib/common.h"
 
 extern int errno;
@@ -26,34 +26,41 @@ char *time_str(void) {
 }
 
 void io_config(FILE *error, FILE *out, FILE *in) {
-    ERR_STREAM = error;
+    LOG_STREAM = error;
     OUT_STREAM = out;
     IN_STREAM = in;
 }
 
-void log_error(const char *fname, const char *filename,
+void log_info(char *info) {
+    char *t_str = time_str();
+    fprintf(LOG_STREAM, "%s - [INFO]: %s\n", t_str, info);
+    fflush(LOG_STREAM);
+    safe_free((void **)&t_str);
+}
+
+void error(const char *fname, const char *filename,
     const int line, const char *details, const int flags) {
 
     char *t_str = time_str();
-    fprintf(ERR_STREAM, "%s - ", t_str);
+    fprintf(LOG_STREAM, "%s - ", t_str);
     safe_free((void **)&t_str);
 
 #ifdef DEBUG
     // If compiled with DEBUG, give extra details about the
     // Source of the error.
-    fprintf(ERR_STREAM, debug_err_header, fname, filename, line);
+    fprintf(LOG_STREAM, debug_err_header, fname, filename, line);
 #else
     fprintf(ERR_STREAM, "%s\n", err_header);
 #endif
 
     // Print either system error, or user defined error.
     if (flags & SYS_ERROR) {
-        fprintf(ERR_STREAM, err_format, strerror(errno));
+        fprintf(LOG_STREAM, err_format, strerror(errno));
     } else if (details) {
-        fprintf(ERR_STREAM, err_format, details);
+        fprintf(LOG_STREAM, err_format, details);
     }
 
-    fflush(ERR_STREAM);
+    fflush(LOG_STREAM);
     // Exit application if FATAL flag was set.
     if (flags & FATAL) {
         exit(EXIT_FAILURE);

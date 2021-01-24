@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "lib/io.h"
+#include "lib/IO.h"
 #include "lib/common.h"
 #include "lib/network.h"
 
@@ -67,7 +67,7 @@ int server_socket(const char *service, int queue_size) {
     struct addrinfo *head;
     int rc = getaddrinfo(NULL, service, &hints, &head);
     if (rc != 0) {
-        error(NULL, FATAL | SYS_ERROR);
+        log_error(NULL, FATAL | SYS_ERROR);
         return ERROR;
     }
 
@@ -104,7 +104,7 @@ int client_socket(const char *host, const char *service) {
     struct addrinfo *head;
     int ret_val = getaddrinfo(host, service, &hints, &head);
     if (ret_val != 0) {
-        error(NULL, SYS_ERROR | FATAL);
+        log_error(NULL, SYS_ERROR | FATAL);
         return ERROR;
     }
 

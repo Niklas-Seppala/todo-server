@@ -3,7 +3,7 @@
 
 #include "lib/common.h"
 #include "server/server_IO.h"
-#include "lib/io.h"
+#include "lib/IO.h"
 
 int config_server_io(void) {
     FILE *err_log = fopen("./logs/server.log", "a");
@@ -12,7 +12,7 @@ int config_server_io(void) {
         return ERROR;
     }
 
-    ERR_STREAM = err_log;
+    LOG_STREAM = err_log;
     OUT_STREAM = stdout;
     IN_STREAM = stdin;
 

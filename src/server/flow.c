@@ -8,7 +8,7 @@
 #include "server/app.h"
 
 static void cleanup(void) {
-    fclose(ERR_STREAM);
+    fclose(LOG_STREAM);
     fclose(IN_STREAM);
     fclose(OUT_STREAM);
 
@@ -32,7 +32,7 @@ void signal_handler(int sig) {
 int init_connection(const char *port) {
     SERVER_SOCK = server_socket(port, SERVER_QUEUE_SIZE);
     if (SERVER_SOCK < 0) {
-        error(NULL, SYS_ERROR);
+        log_error(NULL, SYS_ERROR);
         return ERROR;
     }
     return SUCCESS;

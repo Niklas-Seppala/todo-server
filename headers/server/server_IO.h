@@ -1,7 +1,7 @@
 #if !defined(SERVER_IO)
 #define SERVER_IO
 
-#include "lib/io.h"
+#include "lib/IO.h"
 
 /**
  * @brief Set server io streams
