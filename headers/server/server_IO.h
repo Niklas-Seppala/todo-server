@@ -3,19 +3,38 @@
 
 #include "lib/IO.h"
 
-
 /**
- * @brief Set server io streams
- * 
+ * @brief Server setup failed, prints instruction
+ *        message to OUT_STREAM
  */
-int config_server_io(void);
+void io_setup_fail(void);
 
 /**
- * @brief 
+ * @brief Sets std streams as default streams
+ *        to LOG_STREAM, IN_STREAM, OUT_STREAM
+ */
+void io_set_default_streams(void);
+
+/**
+ * @brief Server setup was success, print
+ *        server address to LOG_STREAM
+ */
+void io_setup_success(void);
+
+/**
+ * @brief setup LOG_STREAM to defined
+ *        FILE
  * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @return int SUCCESS or ERROR
+ */
+int io_setup(void);
+
+/**
+ * @brief Validates CLI arguments.
+ * 
+ * @param argc argument count
+ * @param argv argument vector
+ * @return int SUCCESS or ERROR
  */
 int validate_args(int argc, const char **argv);
 

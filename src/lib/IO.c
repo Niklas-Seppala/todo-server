@@ -8,14 +8,16 @@
 #include "lib/common.h"
 
 extern int errno;
-static const char *debug_err_header =
-    "[ERROR] in function: %s()\n\t\t" \
-    "at file:   %s\n\t\t" \
-    "at line:   %d\n";
 #ifndef DEBUG
 static const char *err_header = "[ERROR] ";
-#endif // !DEBUG
+static const char *err_format = "%s\n";
+#else
+static const char *err_header =
+    "[ERROR] [DEBUG] in function: %s()\n\t\t" \
+    "at file:   %s\n\t\t" \
+    "at line:   %d\n";
 static const char *err_format = "\t\t%s\n";
+#endif // !DEBUG
 
 char *time_str(void) {
     const int LEN = 80;
@@ -29,6 +31,11 @@ void io_config(FILE *error, FILE *out, FILE *in) {
     LOG_STREAM = error;
     OUT_STREAM = out;
     IN_STREAM = in;
+}
+
+void log_new_session(void) {
+    fprintf(LOG_STREAM, "\n");
+    log_info("Starting new session");
 }
 
 void log_warn(const char *warn) {
@@ -52,12 +59,13 @@ void error(const char *fname, const char *filename,
     fprintf(LOG_STREAM, "%s - ", t_str);
     safe_free((void **)&t_str);
 
-#ifdef DEBUG
+
     // If compiled with DEBUG, give extra details about the
     // Source of the error.
-    fprintf(LOG_STREAM, debug_err_header, fname, filename, line);
+#ifdef DEBUG
+    fprintf(LOG_STREAM, err_header, fname, filename, line);
 #else
-    fprintf(ERR_STREAM, "%s\n", err_header);
+    fprintf(LOG_STREAM, "%s", err_header);
 #endif
 
     // Print either system error, or user defined error.

@@ -23,7 +23,7 @@ static void cleanup(void) {
 
 void signal_handler(int sig) {
     if (sig == SIGINT) {
-        log_info("Received signal: [SIGINT] Server shutting down!");
+        log_warn("Received signal: [SIGINT] Server shutting down!");
         cleanup();
         exit(EXIT_SUCCESS);
     }
@@ -44,7 +44,7 @@ int init_connection(const char *port) {
 
 int shutdown_server(const int r_code, const char *log) {
     if (log) {
-        log_info(log);
+        log_warn(log);
     }
     cleanup();
     exit(r_code);

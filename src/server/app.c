@@ -10,41 +10,46 @@ SOCKET SERVER_SOCK = -1;
 SOCKET CLIENT_SOCK = -1;
 struct sockaddr *SERVER_ADDRESS = NULL;
 
-int setup(int argc, const char **argv) {
-    // Set default streams
-    OUT_STREAM = stdout;
-    IN_STREAM = stdin;
-
+static int start(int argc, const char **argv) {
+    io_set_default_streams();
     signal(SIGINT, signal_handler);
 
     if (validate_args(argc, argv) != SUCCESS) {
         exit(EXIT_FAILURE);
     }
-
-    if (config_server_io() != SUCCESS) {
-        fprintf(OUT_STREAM, "%s\n", "Could not start the server, see log for errors");
+    // Set LOG_STREAM
+    if (io_setup() != SUCCESS) {
+        io_setup_fail();
         shutdown_server(EXIT_FAILURE, "Aborting server setup!");
     }
-
+    log_new_session();
+    // Try to open a main server socket
     const char *PORT = argv[1];
     if (init_connection(PORT) != SUCCESS) {
-        fprintf(OUT_STREAM, "%s\n", "Could not start the server, see log for errors");
+        io_setup_fail();
         shutdown_server(EXIT_FAILURE, "Aborting server setup!");
     }
-    
-    // struct readable_addr *addr;
-    // addr_to_readable()
-
+    io_setup_success();
     return SUCCESS;
 }
 
+static void serve_clients() {
+    log_info("Ready to serve clients");
+    for (;;) {
+        // TODO: accept connections
+    }
+}
 
+
+/**
+ * @brief Starts the server after configurations
+ *        are complete.
+ * 
+ * @param argc CLI argument count. MIN 2
+ * @param argv Array of arguments
+ */
 int main(int argc, char const *argv[]) {
-    setup(argc, argv);
-    fprintf(OUT_STREAM, "%s\n", "Server configured");
-
-
-    // Server Connections
-    fprintf(OUT_STREAM, "%s\n", "Waiting clients");
-    for(;;) { }
+    start(argc, argv);
+    fprintf(OUT_STREAM, "%s\n", "Server running..");
+    serve_clients(); // Blocks indefinitely.
 }
