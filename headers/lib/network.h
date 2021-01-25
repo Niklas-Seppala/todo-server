@@ -15,6 +15,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include "lib/IO.h"
+
 #define SOCKET int
 #define READ_ERR      0x2
 #define READ_OVERFLOW 0x4
@@ -59,9 +61,8 @@ struct server_conn {
  * @return int 
  */
 int read_socket(SOCKET sock, char *main_buffer,
-    char *pkg_buffer, const size_t main_size,
+    void *pkg_buffer, const size_t main_size,
     const size_t pkg_size);
-
 /**
  * @brief  Get socket address info as generic
  *         socket address. Works with both IPV4/IPV6.

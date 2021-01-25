@@ -54,7 +54,7 @@ int addr_to_readable(const struct sockaddr *address,
 }
 
 int read_socket(SOCKET sock, char *main_buffer,
-    char *pkg_buffer, const size_t main_size,
+    void *pkg_buffer, const size_t main_size,
     const size_t pkg_size) {
 
     if (!main_buffer || !pkg_buffer) {
@@ -78,7 +78,7 @@ int read_socket(SOCKET sock, char *main_buffer,
             log_error("Package overflow", 0);
             vflog_info("Current socket message length: %lu," \
                 "expected length %lu", total_bytes, pkg_size);
-            warn_info("Aborting read!");
+            log_warn("Aborting read!");
             return READ_ERR | READ_OVERFLOW;
         } else {
             // Copy available data from main buffer to

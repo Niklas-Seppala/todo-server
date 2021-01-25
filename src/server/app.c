@@ -77,48 +77,48 @@ static struct server_conn *wait_connection() {
     return conn;
 }
 
-int read_header_pkg(void *h_buffer, struct server_conn* conn) {
-    size_t total_bytes = 0;
-    ssize_t read = 0;
-    char *pkg_head = h_buffer;
+// int read_header_pkg(void *h_buffer, struct server_conn* conn) {
+//     size_t total_bytes = 0;
+//     ssize_t read = 0;
+//     char *pkg_head = h_buffer;
 
-    while (total_bytes < HEADER_SIZE) {
+//     while (total_bytes < HEADER_SIZE) {
 
-        // Reset buffer, only HEADER_SIZE
-        memset(recv_buffer, 0, HEADER_SIZE);
+//         // Reset buffer, only HEADER_SIZE
+//         memset(recv_buffer, 0, HEADER_SIZE);
 
-        // Read all available bytes from socket to recv buffer
-        read = recv(conn->sock, recv_buffer, RECV_BUFF_SIZE, 0);
-        if (read < 0) {
-            // Socket read failed, abort!
-            log_error(NULL, SYS_ERROR);
-            return ERROR;
-        }
-        else {
-            // Keep track of acculminated network message length
-            // aka. what client has sent.
-            total_bytes += read;
-        }
-        if (total_bytes > HEADER_SIZE) {
-            // Protocol dictates that client must start communications
-            // by sending HEADER package of 16-bytes.
-            log_error("Client is not following potocol.", 0);
-            vflog_info("Message length: %lu", total_bytes);
-            log_info("Sending error message...");
+//         // Read all available bytes from socket to recv buffer
+//         read = recv(conn->sock, recv_buffer, RECV_BUFF_SIZE, 0);
+//         if (read < 0) {
+//             // Socket read failed, abort!
+//             log_error(NULL, SYS_ERROR);
+//             return ERROR;
+//         }
+//         else {
+//             // Keep track of acculminated network message length
+//             // aka. what client has sent.
+//             total_bytes += read;
+//         }
+//         if (total_bytes > HEADER_SIZE) {
+//             // Protocol dictates that client must start communications
+//             // by sending HEADER package of 16-bytes.
+//             log_error("Client is not following potocol.", 0);
+//             vflog_info("Message length: %lu", total_bytes);
+//             log_info("Sending error message...");
 
-            // TODO: send error message to client.
-            return ERROR;
-        } else {
-            // Copy available data from recv buffer to
-            // header package buffer.
-            memcpy(pkg_head, recv_buffer, read);
-            // Keep track of the current pointer after multiple
-            // writes
-            pkg_head += read;
-        }
-    }
-    return SUCCESS;
-}
+//             // TODO: send error message to client.
+//             return ERROR;
+//         } else {
+//             // Copy available data from recv buffer to
+//             // header package buffer.
+//             memcpy(pkg_head, recv_buffer, read);
+//             // Keep track of the current pointer after multiple
+//             // writes
+//             pkg_head += read;
+//         }
+//     }
+//     return SUCCESS;
+// }
 
 /**
  * @brief Waits for connections and handles
@@ -127,9 +127,6 @@ int read_header_pkg(void *h_buffer, struct server_conn* conn) {
  *        for new client.
  */
 static void serve_clients() {
-    // size_t main_pkg_size = 128;
-    // char m_pkg_buffer[main_pkg_size];
-
     for (;;) {
         struct server_conn *conn = wait_connection();
         if (conn) {
@@ -140,20 +137,30 @@ static void serve_clients() {
                 conn->readable.port
             );
 
-            struct header *h_pkg = calloc(1, sizeof(struct header));
-            if (read_header_pkg(h_pkg, conn) == SUCCESS) {
-                header_from_network(h_pkg);
+            struct header *header_pkg = calloc(1, sizeof(struct header));
+            int rc = read_socket(conn->sock, recv_buffer,
+                header_pkg, RECV_BUFF_SIZE, HEADER_SIZE);
+            if (rc != SUCCESS) {
+                if (rc & READ_OVERFLOW) {
+                    // TODO: handle overflow
+                    // SEND MESSAGE TO USER AND TERMINATE
+                } else if (READ_VAL_ERR) {
+                    log_error("NULL buffer", 0);
+                    shutdown_server(EXIT_FAILURE, NULL);
+                }
+            } else { // SUCCESS
+                header_from_network(header_pkg);
+                vflog_info("Header package received:\n\tSender: %s"\
+                    "\n\tMain package size: %u"\
+                    "\n\tCode: %s",
+                    header_pkg->sender, header_pkg->size, enum_to_str(header_pkg->cmd));
                 // TODO: reallocate more/less memory for main_pkg-buffer
-                //       based on size specified in header
-
+                //       based on size specified in header (if needed)
                 // TODO: send VAL msg to client, and wait for main package
-            } else {
-                // TODO: send Error msg to client ??
             }
-
             // Connection handled
             close(conn->sock);
-            safe_free((void **)&h_pkg);
+            safe_free((void **)&header_pkg);
             safe_free((void **)&conn);
             vflog_info("Connection %ld closed.", conn_num++);
         }
