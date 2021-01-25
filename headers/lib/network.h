@@ -16,6 +16,9 @@
 #include <netdb.h>
 
 #define SOCKET int
+#define READ_ERR      0x2
+#define READ_OVERFLOW 0x4
+#define READ_VAL_ERR  0x8
 
 /**
  * @brief port is uint16, so
@@ -43,6 +46,21 @@ struct server_conn {
     struct sockaddr_storage addr;
     struct readable_addr readable;
 };
+
+
+/**
+ * @brief 
+ * 
+ * @param sock 
+ * @param main_buffer 
+ * @param pkg_buffer 
+ * @param main_size 
+ * @param pkg_size 
+ * @return int 
+ */
+int read_socket(SOCKET sock, char *main_buffer,
+    char *pkg_buffer, const size_t main_size,
+    const size_t pkg_size);
 
 /**
  * @brief  Get socket address info as generic

@@ -108,7 +108,6 @@ int read_header_pkg(void *h_buffer, struct server_conn* conn) {
 
             // TODO: send error message to client.
             return ERROR;
-            break;
         } else {
             // Copy available data from recv buffer to
             // header package buffer.

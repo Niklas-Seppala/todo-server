@@ -53,6 +53,43 @@ int addr_to_readable(const struct sockaddr *address,
     return SUCCESS;
 }
 
+int read_socket(SOCKET sock, char *main_buffer,
+    char *pkg_buffer, const size_t main_size,
+    const size_t pkg_size) {
+
+    if (!main_buffer || !pkg_buffer) {
+        return READ_ERR | READ_VAL_ERR;
+    }
+    size_t total_bytes = 0;
+    ssize_t read_bytes = 0;
+    char *pkg_head = pkg_buffer;
+
+    while (total_bytes < pkg_size) {
+        memset(main_buffer, 0, pkg_size);
+        read_bytes = recv(sock, main_buffer, main_size, 0);
+        if (read_bytes < 0) {
+            // Socket read failed, abort!
+            log_error(NULL, SYS_ERROR);
+            return READ_ERR;
+        }
+        total_bytes += read_bytes;
+        if (total_bytes > pkg_size) {
+            // package buffer will overflow
+            log_error("Package overflow", 0);
+            vflog_info("Current socket message length: %lu," \
+                "expected length %lu", total_bytes, pkg_size);
+            warn_info("Aborting read!");
+            return READ_ERR | READ_OVERFLOW;
+        } else {
+            // Copy available data from main buffer to
+            // package buffer.
+            memcpy(pkg_head, main_buffer, read_bytes);
+            pkg_head += read_bytes;
+        }
+    }
+    return SUCCESS;
+}
+
 int server_socket(const char *service, int queue_size,
     struct sockaddr_storage *out_addr) {
     struct addrinfo hints;
