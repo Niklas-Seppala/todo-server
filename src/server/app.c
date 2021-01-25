@@ -94,11 +94,11 @@ static void serve_clients() {
                 conn->readable.port
             );
 
-            struct header *header_pkg = calloc(1, sizeof(struct header));
-            int rc = read_socket(conn->sock, recv_buffer,
-                header_pkg, RECV_BUFF_SIZE, HEADER_SIZE);
-            if (rc != SUCCESS) {
-                if (rc & READ_OVERFLOW) {
+            struct header header_pkg;
+            int read_rc = read_socket(conn->sock, recv_buffer,
+                &header_pkg, RECV_BUFF_SIZE, HEADER_SIZE);
+            if (read_rc != SUCCESS) {
+                if (read_rc & READ_OVERFLOW) {
                     // TODO: handle overflow
                     // SEND MESSAGE TO USER AND TERMINATE
                 } else if (READ_VAL_ERR) {
@@ -106,18 +106,17 @@ static void serve_clients() {
                     shutdown_server(EXIT_FAILURE, NULL);
                 }
             } else { // SUCCESS
-                header_from_network(header_pkg);
+                header_from_network(&header_pkg);
                 vflog_info("Header package received:\n\tSender: %s"\
                     "\n\tMain package size: %u"\
                     "\n\tCode: %s",
-                    header_pkg->sender, header_pkg->size, enum_to_str(header_pkg->cmd));
+                    header_pkg.sender, header_pkg.size, enum_to_str(header_pkg.cmd));
                 // TODO: reallocate more/less memory for main_pkg-buffer
                 //       based on size specified in header (if needed)
                 // TODO: send VAL msg to client, and wait for main package
             }
             // Connection handled
             close(conn->sock);
-            safe_free((void **)&header_pkg);
             safe_free((void **)&conn);
             vflog_info("Connection %ld closed.", conn_num++);
         }
