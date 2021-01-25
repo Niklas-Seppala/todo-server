@@ -1,7 +1,10 @@
 **/out
 **/obj
 **/logs
+**vim*
+**.cache/
 **/.vscode
 **/.VSCode*
 *dev*
 **.o
+compile_commands.json

@@ -64,6 +64,14 @@ void error(const char *funcname, const char *filename,
 void log_info(const char *info);
 
 /**
+ * @brief 
+ * 
+ * @param fmt 
+ * @param ... 
+ */
+void vflog_info( const char *fmt, ...);
+
+/**
  * @brief Separates logging sessions with
  *        newline.
  */

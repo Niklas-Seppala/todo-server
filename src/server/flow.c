@@ -12,7 +12,6 @@ static void cleanup(void) {
     safe_free((void **)&SERVER_ADDRESS);
 
     close(SERVER_SOCK);
-    close(CLIENT_SOCK);
 
     fclose(IN_STREAM);
     fclose(OUT_STREAM);
@@ -24,6 +23,7 @@ static void cleanup(void) {
 void signal_handler(int sig) {
     if (sig == SIGINT) {
         log_warn("Received signal: [SIGINT] Server shutting down!");
+        vflog_info("Connections handled: %d", conn_num);
         cleanup();
         exit(EXIT_SUCCESS);
     }
@@ -46,6 +46,7 @@ int shutdown_server(const int r_code, const char *log) {
     if (log) {
         log_warn(log);
     }
+    vflog_info("Connections handled", "%ld", conn_num);
     cleanup();
     exit(r_code);
 }

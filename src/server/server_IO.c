@@ -31,10 +31,8 @@ void io_setup_fail(void) {
 void io_setup_success(void) {
     struct readable_addr addr;
     addr_to_readable(SERVER_ADDRESS, &addr);
-    char msg[128];
-    snprintf(msg, 128, "Server running on %s:%s", addr.ip_addr, addr.port);
     log_info("Configurations successful!");
-    log_info(msg);
+    vflog_info("Server running on %s:%s", addr.ip_addr, addr.port);
 }
 
 int validate_args(int argc, const char **argv) {

@@ -7,7 +7,7 @@
 #include "lib/common.h"
 #include "lib/network.h"
 
-struct sockaddr *generic_peer_addr(const int sock) {
+struct sockaddr *generic_peer_addr(const SOCKET sock) {
     socklen_t size = sizeof(struct sockaddr_storage);
     struct sockaddr_storage *storage = malloc(size);
     getpeername(sock, (struct sockaddr *)storage, &size);

@@ -3,6 +3,8 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+// #include <varargs.h>
+#include <stdarg.h>
 
 #include "lib/IO.h"
 #include "lib/common.h"
@@ -45,6 +47,18 @@ void log_warn(const char *warn) {
     safe_free((void **)&t_str);
 }
 
+void vflog_info(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char *t_str = time_str();
+    fprintf(LOG_STREAM, "%s - [INFO]: ", t_str);
+    vfprintf(LOG_STREAM, fmt, args);
+    fputc('\n', LOG_STREAM);
+    fflush(LOG_STREAM);
+    safe_free((void **)&t_str);
+    va_end(args);
+}
+
 void log_info(const char *info) {
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - [INFO]: %s\n", t_str, info);
@@ -58,7 +72,6 @@ void error(const char *fname, const char *filename,
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - ", t_str);
     safe_free((void **)&t_str);
-
 
     // If compiled with DEBUG, give extra details about the
     // Source of the error.

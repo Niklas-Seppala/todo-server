@@ -23,6 +23,7 @@
  */
 #define PORT_LEN 5
 
+
 /**
  * @brief Readable sockaddr fields
  *        for bot ipv4 and ipv6
@@ -30,6 +31,17 @@
 struct readable_addr {
     char port[PORT_LEN];
     char ip_addr[INET6_ADDRSTRLEN];
+};
+
+/**
+ * @brief Connection data structure
+ * 
+ */
+struct server_conn {
+    SOCKET sock;
+    socklen_t size;
+    struct sockaddr_storage addr;
+    struct readable_addr readable;
 };
 
 /**
