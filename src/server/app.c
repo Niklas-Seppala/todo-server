@@ -52,10 +52,7 @@ static int start(int argc, const char **argv) {
  * @return struct server_conn* pointer to connection
  *         struct. NULL if failed.
  */
-static struct server_conn *wait_connection() {
-    struct server_conn *conn = calloc(1,
-        sizeof(struct server_conn)
-    );
+int wait_connection(struct server_conn *conn) {
     // size for both ipv4 and ipv6
     conn->size = sizeof(struct sockaddr_storage);
 
@@ -67,14 +64,14 @@ static struct server_conn *wait_connection() {
     // If Connection was rejected, cleanup and return NULL
     if (conn->sock < 0) {
         log_error(NULL, SYS_ERROR);
-        safe_free((void **)&conn);
+        return ERROR;
     } else {
         // Make connection address readable
         addr_to_readable((struct sockaddr *)&conn->addr,
             &conn->readable
         );
     }
-    return conn;
+    return SUCCESS;
 }
 
 /**
@@ -85,17 +82,17 @@ static struct server_conn *wait_connection() {
  */
 static void serve_clients() {
     for (;;) {
-        struct server_conn *conn = wait_connection();
-        if (conn) {
+        struct server_conn conn;
+        if (wait_connection(&conn) == SUCCESS) { // Blocks
             // Log client address info
             vflog_info("Accepted client %ld at address: %s:%s",
                 conn_num,
-                conn->readable.ip_addr,
-                conn->readable.port
+                conn.readable.ip_addr,
+                conn.readable.port
             );
 
             struct header header_pkg;
-            int read_rc = read_socket(conn->sock, recv_buffer,
+            int read_rc = read_socket(conn.sock, recv_buffer,
                 &header_pkg, RECV_BUFF_SIZE, HEADER_SIZE);
             if (read_rc != SUCCESS) {
                 if (read_rc & READ_OVERFLOW) {
@@ -115,9 +112,9 @@ static void serve_clients() {
                 //       based on size specified in header (if needed)
                 // TODO: send VAL msg to client, and wait for main package
             }
+
             // Connection handled
-            close(conn->sock);
-            safe_free((void **)&conn);
+            close(conn.sock);
             vflog_info("Connection %ld closed.", conn_num++);
         }
     }
