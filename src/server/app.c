@@ -77,49 +77,6 @@ static struct server_conn *wait_connection() {
     return conn;
 }
 
-// int read_header_pkg(void *h_buffer, struct server_conn* conn) {
-//     size_t total_bytes = 0;
-//     ssize_t read = 0;
-//     char *pkg_head = h_buffer;
-
-//     while (total_bytes < HEADER_SIZE) {
-
-//         // Reset buffer, only HEADER_SIZE
-//         memset(recv_buffer, 0, HEADER_SIZE);
-
-//         // Read all available bytes from socket to recv buffer
-//         read = recv(conn->sock, recv_buffer, RECV_BUFF_SIZE, 0);
-//         if (read < 0) {
-//             // Socket read failed, abort!
-//             log_error(NULL, SYS_ERROR);
-//             return ERROR;
-//         }
-//         else {
-//             // Keep track of acculminated network message length
-//             // aka. what client has sent.
-//             total_bytes += read;
-//         }
-//         if (total_bytes > HEADER_SIZE) {
-//             // Protocol dictates that client must start communications
-//             // by sending HEADER package of 16-bytes.
-//             log_error("Client is not following potocol.", 0);
-//             vflog_info("Message length: %lu", total_bytes);
-//             log_info("Sending error message...");
-
-//             // TODO: send error message to client.
-//             return ERROR;
-//         } else {
-//             // Copy available data from recv buffer to
-//             // header package buffer.
-//             memcpy(pkg_head, recv_buffer, read);
-//             // Keep track of the current pointer after multiple
-//             // writes
-//             pkg_head += read;
-//         }
-//     }
-//     return SUCCESS;
-// }
-
 /**
  * @brief Waits for connections and handles
  *        them. After handling is complete,
