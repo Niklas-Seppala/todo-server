@@ -29,8 +29,8 @@ char *enum_to_str(int cmd) {
     case RMV:
         str = CMD_RMV;
         break;
-    case OK:
-        str = CMD_OK;
+    case VAL:
+        str = CMD_VAL;
         break;
     case INV:
         str = CMD_INV;
@@ -39,7 +39,14 @@ char *enum_to_str(int cmd) {
         return NULL;
     }
     strncpy(result, str, CMD_STR_LEN);
+    result[CMD_STR_LEN] = 0; // NULL terminate
     return result;
+}
+
+void header_from_network(struct header* header) {
+    // Correct endianness
+    header->cmd = ntohs(header->cmd);
+    header->size = ntohs(header->size);
 }
 
 struct header *read_header(char *buffer) {

@@ -47,14 +47,14 @@ enum CMD {
     ADD = 0xC9,
     LOG = 0xE2,
     RMV = 0xF5,
-    OK  = 0x9A,
+    VAL = 0xE3,
 };
 
 #define CMD_INV "INV"
 #define CMD_ADD "ADD"
 #define CMD_LOG "LOG"
 #define CMD_RMV "RMV"
-#define CMD_OK  "OK"
+#define CMD_VAL "VAL"
 
 #define HEADER_SIZE 16
 #define SENDER_SIZE 12
@@ -90,6 +90,13 @@ int create_header(struct header *header, uint16_t cmd,
  * @param header header struct
  */
 void header_to_network(struct header *header);
+
+/**
+ * @brief 
+ * 
+ * @param header 
+ */
+void header_from_network(struct header* header);
 
 /**
  * @brief Copies the buffer contents to header struct

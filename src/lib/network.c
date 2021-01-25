@@ -117,7 +117,9 @@ int client_socket(const char *host, const char *service) {
     for (struct addrinfo *node = head; node != NULL; node = node->ai_next)
     {
         // Create a socket based on address info node and connect it.
-        sock = socket(node->ai_family, node->ai_socktype, node->ai_protocol);
+        sock = socket(node->ai_family, node->ai_socktype,
+            node->ai_protocol
+        );
         if (sock >= 0 && connect(sock, node->ai_addr, node->ai_addrlen) == 0)
             break; // success
 
