@@ -1,7 +1,7 @@
 CC=gcc
 DEBUG=-g -DDEBUG
 OFLAGS=-Wall -Wshadow -c
-HEADERS=-Iheaders
+HEADERS=-Iinclude
 
 OBJ=./obj/
 OUT=./out/
