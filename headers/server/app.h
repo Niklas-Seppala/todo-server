@@ -5,7 +5,7 @@
 
 #define SERVER_QUEUE_SIZE 5
 #define RECV_BUFF_SIZE 512
-
+#define SERVER_NAME "SERVER"
 SOCKET SERVER_SOCK;
 struct sockaddr *SERVER_ADDRESS;
 

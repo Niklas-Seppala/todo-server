@@ -65,7 +65,6 @@ int read_socket(SOCKET sock, char *main_buffer,
     char *pkg_head = pkg_buffer;
 
     while (total_bytes < pkg_size) {
-        memset(main_buffer, 0, pkg_size);
         read_bytes = recv(sock, main_buffer, main_size, 0);
         if (read_bytes < 0) {
             // Socket read failed, abort!

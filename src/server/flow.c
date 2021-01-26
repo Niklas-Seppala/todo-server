@@ -7,7 +7,8 @@
 #include "server/server_IO.h"
 #include "server/app.h"
 
-static void cleanup(void) {
+static void cleanup(void)
+{
     log_info("Cleaning up...");
     safe_free((void **)&SERVER_ADDRESS);
 
@@ -15,12 +16,12 @@ static void cleanup(void) {
 
     fclose(IN_STREAM);
     fclose(OUT_STREAM);
-
     log_info("Cleanup complete.");
     fclose(LOG_STREAM);
 }
 
-void signal_handler(int sig) {
+void signal_handler(int sig)
+{
     if (sig == SIGINT) {
         log_warn("Received signal: [SIGINT] Server shutting down!");
         vflog_info("Connections handled: %d", conn_num);
@@ -29,23 +30,28 @@ void signal_handler(int sig) {
     }
 }
 
-int init_connection(const char *port) {
-    struct sockaddr_storage *server_address = calloc(1,
+int init_connection(const char *port)
+{
+    struct sockaddr_storage *serv_addr = calloc(1,
         sizeof(struct sockaddr_storage));
-    SERVER_SOCK = server_socket(port, SERVER_QUEUE_SIZE, server_address);
+
+    SERVER_SOCK = server_socket(port, SERVER_QUEUE_SIZE, serv_addr);
     if (SERVER_SOCK < 0) {
-        safe_free((void **)&server_address);
+        safe_free((void **)&serv_addr);
         log_error("Could not create valid server socket", 0);
         return ERROR;
     }
-    SERVER_ADDRESS = (struct sockaddr *)server_address;
+
+    SERVER_ADDRESS = (struct sockaddr *)serv_addr;
     return SUCCESS;
 }
 
-int shutdown_server(const int r_code, const char *log) {
+int shutdown_server(const int r_code, const char *log)
+{
     if (log) {
         log_warn(log);
     }
+
     vflog_info("Connections handled", "%ld", conn_num);
     cleanup();
     exit(r_code);

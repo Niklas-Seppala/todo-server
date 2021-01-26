@@ -40,15 +40,38 @@
 
 /**
  * @brief Command enum value is a sum
- *        of it's char representation
+ *        of it's char representation.
+ * 
+ *        VAL = VALID,
+ *        INV = INVALID,
+ *        ADD = ADD STUFF,
+ *        LOG = TELL ME STUFF,
+ *        RMV = REMOVE STUFF
  */
-enum CMD {
-    INV = 0xEd,
-    ADD = 0xC9,
-    LOG = 0xE2,
-    RMV = 0xF5,
-    VAL = 0xE3,
-};
+
+/**
+ * @brief Code for invalid network message
+ */
+#define INV 0xEd
+/**
+ * @brief Code for requesting to
+ *        add stuff to server.
+ */
+#define ADD 0xC9
+/**
+ * @brief Code for request to log user data
+ *        in server.
+ */
+#define LOG 0xE2
+/**
+ * @brief Code for request to remove user data
+ *        from server.
+ */
+#define RMV 0xF5
+/**
+ * @brief Code for valid network message
+ */
+#define VAL 0xE3
 
 #define CMD_INV "INV"
 #define CMD_ADD "ADD"
@@ -71,6 +94,25 @@ struct header {
     char sender[SENDER_SIZE];
     uint16_t size;
 };
+
+/**
+ * @brief 
+ * 
+ * @param main_pkg 
+ * @param curr_size 
+ * @param new_size 
+ * @return int 
+ */
+int alloc_main_pkg(char **main_pkg, size_t *curr_size,
+    const size_t new_size);
+
+/**
+ * @brief 
+ * 
+ * @param pkg 
+ * @return size_t 
+ */
+size_t main_pkg_size(char *pkg);
 
 /**
  * @brief Sets header struct fields.

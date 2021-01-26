@@ -17,7 +17,8 @@ int io_setup(void) {
     return SUCCESS;
 }
 
-void io_set_default_streams(void) {
+void io_set_default_streams(void)
+{
     OUT_STREAM = stdout;
     IN_STREAM = stdin;
     LOG_STREAM = stderr;

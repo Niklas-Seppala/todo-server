@@ -22,8 +22,12 @@ static const char *err_format = "\t\t%s\n";
 #endif // !DEBUG
 
 char *time_str(void) {
-    const int LEN = 80;
+    const int LEN = 180;
     char *buffer = malloc(LEN);
+    if (!buffer) {
+        log_error(NULL, SYS_ERROR);
+        return NULL;
+    }
     time_t now = time(NULL);
     strftime(buffer, LEN, "%Y-%m-%d %H:%M:%S", localtime(&now));
     return buffer;

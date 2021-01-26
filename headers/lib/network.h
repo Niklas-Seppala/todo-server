@@ -44,7 +44,7 @@ struct readable_addr {
  */
 struct server_conn {
     SOCKET sock;
-    socklen_t size;
+    socklen_t addrsize;
     struct sockaddr_storage addr;
     struct readable_addr readable;
 };
