@@ -55,6 +55,14 @@ int send_code(SOCKET sock, int cmd)
     return send(sock, &h, HEADER_SIZE, 0);
 }
 
+
+struct work_args {
+    SOCKET *sock;
+    struct header *header;
+    char *static_buff;
+};
+
+
 int shutdown_server(const int r_code, const char *log)
 {
     if (log) {

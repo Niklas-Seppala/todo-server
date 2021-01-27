@@ -84,17 +84,6 @@ struct header {
 };
 
 /**
- * @brief 
- * 
- * @param main_pkg 
- * @param curr_size 
- * @param new_size 
- * @return int 
- */
-int alloc_main_pkg(char **main_pkg, size_t *curr_size,
-    const size_t new_size);
-
-/**
  * @brief Calculates main package size.
  * 
  * @param pkg main package

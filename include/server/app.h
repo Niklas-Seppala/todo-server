@@ -16,12 +16,10 @@
 /**
  * @brief Maximum connection in queue.
  */
-#define SERVER_QUEUE_SIZE 5
+#define SERVER_QUEUE_SIZE 10
 
-/**
- * @brief Size of the static recv buffer
- */
-#define RECV_BUFF_SIZE 512
+
+#define MAIN_PKG_START_SIZE 512
 
 /**
  * @brief Name of the server in 

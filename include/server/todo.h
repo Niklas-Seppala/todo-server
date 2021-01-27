@@ -11,7 +11,6 @@
 
 #ifndef TODO_H
 #define TODO_H
-
 #include <stdlib.h>
 #include "lib/network.h"
 #include "lib/protocol.h"
@@ -23,12 +22,12 @@
  * @param header header received from client
  * @param main_pkg main package buffer
  * @param curr_size current size of the main package buffer
- * @param static_buff static read buffer
- * @param static_buff_size size of the static read buffer.
+ * @param sbuff static read buffer
+ * @param sbuff_size size of the static read buffer.
  * @return int SUCCESS if ok, else ERROR
  */
-int handle_ADD(const SOCKET sock, const struct header *header, char **main_pkg,
-    size_t *curr_size, char *static_buff, const size_t static_buff_size);
+int handle_ADD(const SOCKET sock, const struct header *header,
+    char *sbuff, const size_t sbuff_size);
 
 /**
  * @brief Serves the client RMV command.

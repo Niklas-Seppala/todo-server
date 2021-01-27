@@ -2,6 +2,13 @@
 #define FLOW_H
 #include "lib/network.h"
 
+
+struct work_args {
+    SOCKET *sock;
+    struct header *header;
+    char *static_buff;
+};
+
 /**
  * @brief Graceful shutdown with return code.
  * 

@@ -1,27 +1,27 @@
 #include <stdlib.h>
 #include "server/todo.h"
 #include "server/app.h"
-#include "server/flow.h"
+#include "server/server.h"
 #include "lib/common.h"
 
-int handle_ADD(const SOCKET sock, const struct header *header, char **main_pkg,
-    size_t *curr_size, char *static_buff, const size_t static_buff_size)
+int handle_ADD(const SOCKET sock, const struct header *header,
+    char *sbuff, const size_t sbuff_size)
 {
-    ssize_t n_bytes = alloc_main_pkg(main_pkg, curr_size, header->size);
-
-    if (n_bytes == ERROR) {
+    char *main_pkg = malloc(header->size);
+    if (!main_pkg) {
         log_error(NULL, SYS_ERROR);
-        shutdown_server(EXIT_FAILURE, "Memory allocation failed."); // for now
+        log_warn("uh oh :D");
+        // TODO: exit thread
     }
 
     send_code(sock, VAL);
-    read_socket(sock, static_buff, *main_pkg,
-        RECV_BUFF_SIZE, *curr_size
-    );
 
-    vflog_info("Main package: %s", *main_pkg); // DEBUG
+    read_socket(sock, sbuff, main_pkg, sbuff_size, header->size);
+
+    vflog_info("Main package: %s", main_pkg);
     // TODO: Store main_pkg contents to database
 
+    safe_free((void **)&main_pkg);
     return SUCCESS;
 }
 
