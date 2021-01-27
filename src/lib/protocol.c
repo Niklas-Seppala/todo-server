@@ -8,7 +8,7 @@
 
 static const int CMD_STR_LEN = 3;
 
-int str_to_enum(char *cmd)
+int str_to_cmd(char *cmd)
 {
     int result = 0;
     for (int i = 0; i < CMD_STR_LEN; i++) {
@@ -17,7 +17,7 @@ int str_to_enum(char *cmd)
     return result;
 }
 
-char *enum_to_str(int cmd)
+char *cmd_to_str(int cmd)
 {
     char * result = malloc(CMD_STR_LEN+1);
     char *str;
@@ -51,7 +51,7 @@ size_t main_pkg_size(char *pkg)
 }
 
 int alloc_main_pkg(char **main_pkg, size_t *curr_size,
-    const size_t new_size) 
+    const size_t new_size)
 {
     size_t new_memory = 0;
     if (new_size > *curr_size) {

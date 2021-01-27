@@ -1,13 +1,12 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <string.h>
 
-#include "lib/protocol.h"
+#include "server/todo.h"
 #include "server/app.h"
-#include "lib/common.h"
 #include "server/flow.h"
 #include "server/server_IO.h"
+#include "lib/common.h"
 
 // Globals
 SOCKET SERVER_SOCK = -1;
@@ -18,9 +17,10 @@ static char recv_buffer[RECV_BUFF_SIZE];
 size_t main_pkg_len = 256;
 char *main_pkg;
 
-int start(int argc, const char **argv) {
+int start(int argc, const char **argv)
+{
     io_set_default_streams();
-    signal(SIGINT, signal_handler);
+    signal(SIGINT, sigint_handler);
 
     if (validate_args(argc, argv) != SUCCESS) {
         exit(EXIT_FAILURE);
@@ -62,41 +62,23 @@ int wait_connection(struct server_conn *conn)
     return SUCCESS;
 }
 
-int send_code(SOCKET sock, int cmd)
-{
-    struct header h;
-    create_header(&h, cmd, SERVER_NAME, 0);
-    header_to_nw(&h);
-
-    return send(sock, &h, HEADER_SIZE, 0);
-}
-
-int handle_ADD(const struct server_conn *conn,
-    const struct header *header_pkg)
-{
-    ssize_t n_bytes = alloc_main_pkg(&main_pkg, &main_pkg_len,
-        header_pkg->size
-    );
-    if (n_bytes == ERROR) {
-        log_error(NULL, SYS_ERROR);
-        shutdown_server(EXIT_FAILURE,
-            "Memory allocation failed."); // for now
-    }
-    send_code(conn->sock, VAL);
-    read_socket(conn->sock, recv_buffer, main_pkg,
-        RECV_BUFF_SIZE, main_pkg_len
-    );
-    vflog_info("Main package: %s", main_pkg); // DEBUG
-    return SUCCESS;
-}
-
 int serve_client_request(const struct server_conn *conn,
-    const struct header *header_pkg) 
+    const struct header *header_pkg)
 {
     switch (header_pkg->cmd) {
     case ADD:
-        return handle_ADD(conn, header_pkg);
+        return handle_ADD(conn->sock, header_pkg, &main_pkg,
+            &main_pkg_len, recv_buffer, RECV_BUFF_SIZE
+        );
+
+    case LOG:
+        return handle_LOG(conn->sock, header_pkg);
+
+    case RMV:
+        return handle_RMV(conn->sock, header_pkg);
+
     default:
+        log_error("Unsupported client command.", 0);
         return ERROR;
         break;
     }

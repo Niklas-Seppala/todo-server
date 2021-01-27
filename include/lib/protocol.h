@@ -106,7 +106,7 @@ size_t main_pkg_size(char *pkg);
  * @brief Sets header struct fields.
  * 
  * @param header header struct
- * @param cmd CMD enum
+ * @param cmd command code
  * @param sender sender string
  * @param content_size length of the content string.
  * @return int SUCCESS if OK
@@ -143,7 +143,7 @@ struct header *read_header(char *buffer);
  * @param cmd Command enum
  * @return char* corresponding string
  */
-char *enum_to_str(int cmd);
+char *cmd_to_str(int cmd);
 
 /**
  * @brief Converts command string to mapped
@@ -152,6 +152,6 @@ char *enum_to_str(int cmd);
  * @param cmd command string
  * @return int corresponding enum value
  */
-int str_to_enum(char *cmd);
+int str_to_cmd(char *cmd);
 
 #endif

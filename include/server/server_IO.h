@@ -1,3 +1,14 @@
+/**
+ * @file server_IO.h
+ * @author Niklas Seppälä
+ * @brief Module that provides IO-communication functions
+ *        to server application.
+ * @version 0.1
+ * @date 2021-01-27
+ * 
+ * @copyright Copyright (c) 2021
+ */
+
 #if !defined(SERVER_IO)
 #define SERVER_IO
 

@@ -20,7 +20,7 @@ static void cleanup(void)
     fclose(LOG_STREAM);
 }
 
-void signal_handler(int sig)
+void sigint_handler(int sig)
 {
     if (sig == SIGINT) {
         log_warn("Received signal: [SIGINT] Server shutting down!");

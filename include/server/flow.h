@@ -2,27 +2,30 @@
 #define FLOW_H
 
 /**
- * @brief 
+ * @brief Graceful shutdown with return code.
  * 
- * @param r_code 
- * @param log 
- * @return int 
+ * @param r_code program exit code.
+ * @param log optional final info log
+ * @return int program exit code.
  */
 int shutdown_server(const int r_code, const char *log);
 
 /**
- * @brief 
+ * @brief Creates socket for the server, that listens
+ *        specified port.
  * 
- * @param port 
- * @return int 
+ * @param port server port
+ * @return int SUCCESS if OK, else ERROR
  */
 int init_connection(const char *port);
 
 /**
- * @brief 
+ * @brief Interrupt signal handler. Activates graceful
+ *        shutdown, and the exits program with
+ *        EXIT_SUCCESS code
  * 
- * @param sig 
+ * @param sig SIGINT
  */
-void signal_handler(int sig);
+void sigint_handler(int sig);
 
 #endif // FLOW_H

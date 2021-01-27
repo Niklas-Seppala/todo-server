@@ -7,4 +7,5 @@
 **/.VSCode*
 *dev*
 **.o
+
 compile_commands.json
