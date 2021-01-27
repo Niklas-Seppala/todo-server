@@ -4,7 +4,7 @@
 
 #include "server/todo.h"
 #include "server/app.h"
-#include "server/flow.h"
+#include "server/server.h"
 #include "server/server_IO.h"
 #include "lib/common.h"
 
@@ -113,7 +113,7 @@ int handle_connection(struct server_conn *conn)
     return SUCCESS;
 }
 
-static void serve_clients()
+static void run()
 {
     main_pkg = malloc(main_pkg_len);
     for (;;) {
@@ -138,5 +138,5 @@ int main(int argc, char const *argv[])
 {
     start(argc, argv);
     fprintf(OUT_STREAM, "%s\n", "Server running..");
-    serve_clients(); // Blocks indefinitely.
+    run(); // Blocks indefinitely.
 }

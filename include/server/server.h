@@ -1,5 +1,6 @@
 #if !defined(FLOW_H)
 #define FLOW_H
+#include "lib/network.h"
 
 /**
  * @brief Graceful shutdown with return code.
@@ -18,6 +19,16 @@ int shutdown_server(const int r_code, const char *log);
  * @return int SUCCESS if OK, else ERROR
  */
 int init_connection(const char *port);
+
+
+/**
+ * @brief Sends a reply code to socket.
+ * 
+ * @param sock target
+ * @param cmd VAL / INV
+ * @return int SUCCESS if ok ELSE ERROR
+ */
+int send_code(SOCKET sock, int cmd);
 
 /**
  * @brief Interrupt signal handler. Activates graceful

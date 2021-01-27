@@ -4,14 +4,6 @@
 #include "server/flow.h"
 #include "lib/common.h"
 
-int send_code(SOCKET sock, int cmd)
-{
-    struct header h;
-    create_header(&h, cmd, SERVER_NAME, 0);
-    header_to_nw(&h);
-    return send(sock, &h, HEADER_SIZE, 0);
-}
-
 int handle_ADD(const SOCKET sock, const struct header *header, char **main_pkg,
     size_t *curr_size, char *static_buff, const size_t static_buff_size)
 {

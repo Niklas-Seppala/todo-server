@@ -3,6 +3,7 @@
 #include <signal.h>
 
 #include "lib/common.h"
+#include "lib/protocol.h"
 #include "lib/network.h"
 #include "server/server_IO.h"
 #include "server/app.h"
@@ -44,6 +45,14 @@ int init_connection(const char *port)
 
     SERVER_ADDRESS = (struct sockaddr *)serv_addr;
     return SUCCESS;
+}
+
+int send_code(SOCKET sock, int cmd)
+{
+    struct header h;
+    create_header(&h, cmd, SERVER_NAME, 0);
+    header_to_nw(&h);
+    return send(sock, &h, HEADER_SIZE, 0);
 }
 
 int shutdown_server(const int r_code, const char *log)

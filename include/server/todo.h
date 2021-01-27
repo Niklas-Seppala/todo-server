@@ -17,15 +17,6 @@
 #include "lib/protocol.h"
 
 /**
- * @brief Sends a reply code to socket.
- * 
- * @param sock target
- * @param cmd VAL / INV
- * @return int SUCCESS if ok ELSE ERROR
- */
-int send_code(SOCKET sock, int cmd);
-
-/**
  * @brief Serves the client ADD command.
  * 
  * @param sock client socket
