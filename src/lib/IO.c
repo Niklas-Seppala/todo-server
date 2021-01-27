@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
-// #include <varargs.h>
 #include <stdarg.h>
 
 #include "lib/IO.h"
@@ -21,58 +20,68 @@ static const char *err_header =
 static const char *err_format = "\t\t%s\n";
 #endif // !DEBUG
 
-char *time_str(void) {
-    const int LEN = 180;
+char *time_str(void)
+{
+    const int LEN = 80;
     char *buffer = malloc(LEN);
-    if (!buffer) {
-        log_error(NULL, SYS_ERROR);
-        return NULL;
-    }
+
     time_t now = time(NULL);
     strftime(buffer, LEN, "%Y-%m-%d %H:%M:%S", localtime(&now));
+
     return buffer;
 }
 
-void io_config(FILE *error, FILE *out, FILE *in) {
+void io_config(FILE *error, FILE *out, FILE *in)
+{
     LOG_STREAM = error;
     OUT_STREAM = out;
     IN_STREAM = in;
 }
 
-void log_new_session(void) {
+void log_new_session(void)
+{
     fprintf(LOG_STREAM, "\n");
     log_info("Starting new session");
 }
 
-void log_warn(const char *warn) {
+void log_warn(const char *warn)
+{
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - [WARN]: %s\n", t_str, warn);
+
     fflush(LOG_STREAM);
     safe_free((void **)&t_str);
 }
 
-void vflog_info(const char *fmt, ...) {
+void vflog_info(const char *fmt, ...)
+{
     va_list args;
     va_start(args, fmt);
+
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - [INFO]: ", t_str);
+
     vfprintf(LOG_STREAM, fmt, args);
     fputc('\n', LOG_STREAM);
+    
     fflush(LOG_STREAM);
     safe_free((void **)&t_str);
+    
     va_end(args);
 }
 
-void log_info(const char *info) {
+void log_info(const char *info)
+{
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - [INFO]: %s\n", t_str, info);
+
     fflush(LOG_STREAM);
     safe_free((void **)&t_str);
 }
 
 void error(const char *fname, const char *filename,
-    const int line, const char *details, const int flags) {
-
+    const int line, const char *details, const int flags)
+{
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - ", t_str);
     safe_free((void **)&t_str);

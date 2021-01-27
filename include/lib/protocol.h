@@ -2,15 +2,13 @@
  * @file protocol.h
  * @author Niklas Seppälä
  * @brief C module for working with custom made data transfer protocol.
- *        Protocol utilizes TCP/IP protocol.
+ *        Protocol utilizes TCP/IP sockets.
  * 
  *        Communication starts with header package:
  *          Header package:
  *              size : 16-bytes
  *              COMMAND
- *                  use    : describe what is the purpose
- *                           of the message.
- *                           @see enum CMD
+ *                  use    : describe what is the purpose of the message.
  *                  type   : uint16_t
  *                  size   : 2 bytes
  *                  offset : 0
@@ -25,11 +23,13 @@
  *                  type   : uint16_t
  *                  size   : 2 bytes
  *                  offset : 14
+ * 
  *        And the main content package is sent (if desired)
  *        after confirmation from receiver:
  *          Main package:
  *              type : byte buffer
  *              size : defined in header
+ * 
  * @version 0.1
  * @date 2021-01-22
  */
@@ -39,44 +39,32 @@
 #include <stdint.h>
 
 /**
- * @brief Command enum value is a sum
- *        of it's char representation.
- * 
- *        VAL = VALID,
- *        INV = INVALID,
- *        ADD = ADD STUFF,
- *        LOG = TELL ME STUFF,
- *        RMV = REMOVE STUFF
- */
-
-/**
  * @brief Code for invalid network message
  */
 #define INV 0xEd
+#define CMD_INV "INV"
 /**
  * @brief Code for requesting to
  *        add stuff to server.
  */
 #define ADD 0xC9
+#define CMD_ADD "ADD"
 /**
  * @brief Code for request to log user data
  *        in server.
  */
 #define LOG 0xE2
+#define CMD_LOG "LOG"
 /**
  * @brief Code for request to remove user data
  *        from server.
  */
 #define RMV 0xF5
+#define CMD_RMV "RMV"
 /**
  * @brief Code for valid network message
  */
 #define VAL 0xE3
-
-#define CMD_INV "INV"
-#define CMD_ADD "ADD"
-#define CMD_LOG "LOG"
-#define CMD_RMV "RMV"
 #define CMD_VAL "VAL"
 
 #define HEADER_SIZE 16
@@ -107,10 +95,10 @@ int alloc_main_pkg(char **main_pkg, size_t *curr_size,
     const size_t new_size);
 
 /**
- * @brief 
+ * @brief Calculates main package size.
  * 
- * @param pkg 
- * @return size_t 
+ * @param pkg main package
+ * @return size_t main package size
  */
 size_t main_pkg_size(char *pkg);
 
@@ -127,18 +115,16 @@ int create_header(struct header *header, uint16_t cmd,
     char *sender, uint16_t content_size);
 
 /**
- * @brief Sets network endianness.
- * 
- * @param header header struct
+ * @brief Sets network endianness from host.
+ * @param header header packet
  */
-void header_to_network(struct header *header);
+void header_to_nw(struct header *header);
 
 /**
- * @brief 
- * 
- * @param header 
+ * @brief Sets host endianness from network.
+ * @param header header packet
  */
-void header_from_network(struct header* header);
+void header_from_nw(struct header* header);
 
 /**
  * @brief Copies the buffer contents to header struct
@@ -152,7 +138,7 @@ struct header *read_header(char *buffer);
 
 /**
  * @brief Converts command enum to mapped
- *        string.
+ *        string. ALLOCATES HEAP MEMORY!
  * 
  * @param cmd Command enum
  * @return char* corresponding string

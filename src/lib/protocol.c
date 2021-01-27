@@ -8,7 +8,8 @@
 
 static const int CMD_STR_LEN = 3;
 
-int str_to_enum(char *cmd) {
+int str_to_enum(char *cmd)
+{
     int result = 0;
     for (int i = 0; i < CMD_STR_LEN; i++) {
         result += cmd[i];
@@ -16,7 +17,8 @@ int str_to_enum(char *cmd) {
     return result;
 }
 
-char *enum_to_str(int cmd) {
+char *enum_to_str(int cmd)
+{
     char * result = malloc(CMD_STR_LEN+1);
     char *str;
     switch (cmd) {
@@ -43,12 +45,14 @@ char *enum_to_str(int cmd) {
     return result;
 }
 
-size_t main_pkg_size(char *pkg) {
+size_t main_pkg_size(char *pkg)
+{
     return strlen(pkg)+1;
 }
 
 int alloc_main_pkg(char **main_pkg, size_t *curr_size,
-    const size_t new_size) {
+    const size_t new_size) 
+{
     size_t new_memory = 0;
     if (new_size > *curr_size) {
         size_t diff = abs(*curr_size - new_size);
@@ -69,13 +73,15 @@ int alloc_main_pkg(char **main_pkg, size_t *curr_size,
     return new_memory;
 }
 
-void header_from_network(struct header* header) {
+void header_from_nw(struct header* header)
+{
     // Correct endianness
     header->cmd = ntohs(header->cmd);
     header->size = ntohs(header->size);
 }
 
-struct header *read_header(char *buffer) {
+struct header *read_header(char *buffer)
+{
     // Read the buffer as header struct
     struct header *temp = (struct header*) buffer;
 
@@ -91,18 +97,23 @@ struct header *read_header(char *buffer) {
     return copy;
 }
 
-void header_to_network(struct header *header) {
+void header_to_nw(struct header *header)
+{
     // Correct endianness
     header->cmd = htons(header->cmd);
     header->size = htons(header->size);
 }
 
-int create_header(struct header *header, uint16_t cmd, char *sender, uint16_t content_size) {
+int create_header(struct header *header, uint16_t cmd,
+    char *sender, uint16_t content_size)
+{
     memset(header, 0, sizeof(struct header));
     header->cmd = cmd;
     header->size = content_size;
+
     if (strlen(sender) > SENDER_SIZE)
         return ERROR;
+
     strncpy(header->sender, sender, SENDER_SIZE);
     return SUCCESS;
 }

@@ -14,7 +14,6 @@
 #include <stdio.h>
 
 #define SYS_ERROR 2
-#define MY_ERROR 4
 
 // Console colors
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -64,12 +63,12 @@ void error(const char *funcname, const char *filename,
 void log_info(const char *info);
 
 /**
- * @brief 
+ * @brief Variadic format log.
  * 
- * @param fmt 
- * @param ... 
+ * @param fmt format string
+ * @param ... vargs
  */
-void vflog_info( const char *fmt, ...);
+void vflog_info(const char *fmt, ...);
 
 /**
  * @brief Separates logging sessions with

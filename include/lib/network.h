@@ -14,13 +14,22 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
 #include "lib/IO.h"
 
+/**
+ * @brief Socket should be socket
+ */
 #define SOCKET int
+
+/**
+ * @brief Socket reading has failed, look for more details
+ */
 #define READ_ERR      0x2
+/**
+ * @brief User has sent more bytes than promised,
+ *        result buffer overflow.
+ */
 #define READ_OVERFLOW 0x4
-#define READ_VAL_ERR  0x8
 
 /**
  * @brief port is uint16, so
@@ -28,41 +37,50 @@
  */
 #define PORT_LEN 5
 
-
 /**
  * @brief Readable sockaddr fields
  *        for bot ipv4 and ipv6
  */
 struct readable_addr {
+    // String representation of port
     char port[PORT_LEN];
+
+    // String representation of ipv4 or ipv6
     char ip_addr[INET6_ADDRSTRLEN];
 };
 
 /**
  * @brief Connection data structure
- * 
  */
 struct server_conn {
+    // Connection socket.
     SOCKET sock;
+
+    // Address size in bytes.
     socklen_t addrsize;
+
+    // Generic storage for ipv4 or ipv6
     struct sockaddr_storage addr;
+
+    // String representation of address
     struct readable_addr readable;
 };
 
-
 /**
- * @brief 
+ * @brief Starts to receive data to main buffer. Bytes are copied
+ *        to result buffer. 
  * 
- * @param sock 
- * @param main_buffer 
- * @param pkg_buffer 
- * @param main_size 
- * @param pkg_size 
- * @return int 
+ * @param sock open socket
+ * @param main_buffer Reuseable buffer with static size
+ * @param pkg_buffer Result buffer, where bytes are collected
+ * @param main_size Main buffer size in bytes
+ * @param pkg_size result buffer size
+ * @return int SUCCESS if OK, else READ_ERR with OR'd details
  */
 int read_socket(SOCKET sock, char *main_buffer,
     void *pkg_buffer, const size_t main_size,
     const size_t pkg_size);
+
 /**
  * @brief  Get socket address info as generic
  *         socket address. Works with both IPV4/IPV6.

@@ -15,7 +15,6 @@ struct sockaddr *SERVER_ADDRESS = NULL;
 long int conn_num = 0;
 static char recv_buffer[RECV_BUFF_SIZE];
 
-
 size_t main_pkg_len = 256;
 char *main_pkg;
 
@@ -43,13 +42,6 @@ int start(int argc, const char **argv) {
     return SUCCESS;
 }
 
-/**
- * @brief Server waits and potentially accepts
- *        connection. Fills connection data to
- *        provided server_conn struct.
- * 
- * @return int SUCCESS if ok, ERROR if failed
- */
 int wait_connection(struct server_conn *conn)
 {
     conn->addrsize = sizeof(struct sockaddr_storage);
@@ -74,7 +66,7 @@ int send_code(SOCKET sock, int cmd)
 {
     struct header h;
     create_header(&h, cmd, SERVER_NAME, 0);
-    header_to_network(&h);
+    header_to_nw(&h);
 
     return send(sock, &h, HEADER_SIZE, 0);
 }
@@ -126,27 +118,21 @@ int handle_connection(struct server_conn *conn)
             // The protocol dictates that communications
             // begin with 16-byte size header package.
             // Here client sent rubish >:(
-            send_code(conn->sock, INV);
+            log_error("Package overflow while reading socket", 0);
+            log_warn("Aborting read!");
+            send_code(conn->sock, INV); // Send error code to client
             return ERROR;
-        } else if (read_rc & READ_VAL_ERR) {
-            log_error("NULL buffer", 0);
-            shutdown_server(EXIT_FAILURE, NULL);
         }
     } else {
-        header_from_network(&header_pkg);
+        header_from_nw(&header_pkg);
         serve_client_request(conn, &header_pkg);
     }
 
     return SUCCESS;
 }
 
-/**
- * @brief Waits for connections and handles
- *        them. After handling is complete,
- *        does some cleanup, and starts waiting
- *        for new client.
- */
-static void serve_clients() {
+static void serve_clients()
+{
     main_pkg = malloc(main_pkg_len);
     for (;;) {
         struct server_conn conn;
@@ -166,7 +152,8 @@ static void serve_clients() {
  * @param argc CLI argument count. MIN 2
  * @param argv Array of arguments
  */
-int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[])
+{
     start(argc, argv);
     fprintf(OUT_STREAM, "%s\n", "Server running..");
     serve_clients(); // Blocks indefinitely.

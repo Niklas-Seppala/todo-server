@@ -7,22 +7,29 @@
 #include "lib/common.h"
 #include "lib/network.h"
 
-struct sockaddr *generic_peer_addr(const SOCKET sock) {
+struct sockaddr *generic_peer_addr(const SOCKET sock)
+{
     socklen_t size = sizeof(struct sockaddr_storage);
     struct sockaddr_storage *storage = malloc(size);
+
     getpeername(sock, (struct sockaddr *)storage, &size);
+
     return (struct sockaddr *)storage;
 }
 
-struct sockaddr *generic_addr(const SOCKET sock) {
+struct sockaddr *generic_addr(const SOCKET sock) 
+{
     socklen_t size = sizeof(struct sockaddr_storage);
     struct sockaddr_storage *storage = malloc(size);
+
     getsockname(sock, (struct sockaddr *)storage, &size);
+
     return (struct sockaddr *)storage;
 }
 
 int addr_to_readable(const struct sockaddr *address,
-    struct readable_addr *result) {
+    struct readable_addr *result)
+{
     void *bin_addr;
 
     switch (address->sa_family) {
@@ -53,13 +60,9 @@ int addr_to_readable(const struct sockaddr *address,
     return SUCCESS;
 }
 
-int read_socket(SOCKET sock, char *main_buffer,
-    void *pkg_buffer, const size_t main_size,
-    const size_t pkg_size) {
-
-    if (!main_buffer || !pkg_buffer) {
-        return READ_ERR | READ_VAL_ERR;
-    }
+int read_socket(SOCKET sock, char *main_buffer, void *pkg_buffer,
+    const size_t main_size, const size_t pkg_size)
+{
     size_t total_bytes = 0;
     ssize_t read_bytes = 0;
     char *pkg_head = pkg_buffer;
@@ -74,10 +77,6 @@ int read_socket(SOCKET sock, char *main_buffer,
         total_bytes += read_bytes;
         if (total_bytes > pkg_size) {
             // package buffer will overflow
-            log_error("Package overflow", 0);
-            vflog_info("Current socket message length: %lu," \
-                "expected length %lu", total_bytes, pkg_size);
-            log_warn("Aborting read!");
             return READ_ERR | READ_OVERFLOW;
         } else {
             // Copy available data from main buffer to
@@ -90,7 +89,8 @@ int read_socket(SOCKET sock, char *main_buffer,
 }
 
 int server_socket(const char *service, int queue_size,
-    struct sockaddr_storage *out_addr) {
+    struct sockaddr_storage *out_addr)
+{
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -132,7 +132,8 @@ int server_socket(const char *service, int queue_size,
     return sock;
 }
 
-int client_socket(const char *host, const char *service) {
+int client_socket(const char *host, const char *service)
+{
     // Specify what kind of socket we want.
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
