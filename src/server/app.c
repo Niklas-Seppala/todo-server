@@ -1,23 +1,19 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <pthread.h>
 
 #include "server/todo.h"
 #include "server/app.h"
 #include "server/server.h"
 #include "server/server_IO.h"
-#include "lib/common.h"
 #include "server/buffpool.h"
+#include "lib/common.h"
 
-// Globals
 SOCKET SERVER_SOCK = -1;
 struct sockaddr *SERVER_ADDRESS = NULL;
 long int conn_num = 0;
-// static char recv_buffer[RECV_BUFF_SIZE];
 
-#define BUFFER_POOL_DEPTH 10
-static struct buffer_node *SBUFFER_POOL;
+struct buffer_node *SBUFFER_POOL;
 
 int start(int argc, const char **argv)
 {
@@ -67,7 +63,7 @@ int wait_connection(struct server_conn *conn)
     return SUCCESS;
 }
 
-int serve_client_request(const struct server_conn *conn,
+int handle_request(const struct server_conn *conn,
     const struct header *header_pkg, char *sbuff)
 {
     switch (header_pkg->cmd) {
@@ -87,7 +83,7 @@ int serve_client_request(const struct server_conn *conn,
 void *handle_connection(void *connection)
 {
     struct server_conn *conn = (struct server_conn *)connection;
-    struct buffer_node * sbuff = get_free_buffer(SBUFFER_POOL);
+    struct buffer_node *sbuff = get_free_buffer(SBUFFER_POOL);
 
     vflog_info("Accepted client %ld at address: %s:%s",
         conn_num, conn->readable.ip_addr, conn->readable.port
@@ -102,15 +98,14 @@ void *handle_connection(void *connection)
         if (read_rc & READ_OVERFLOW) {
             // The protocol dictates that communications
             // begin with 16-byte size header package.
-            // Here client sent rubish >:(
+            // Here client sent rubish
             log_error("Package overflow while reading socket", 0);
-            log_warn("Aborting read!");
             send_code(conn->sock, INV); // Send error code to client
             return NULL;
         }
     } else {
         header_from_nw(&header_pkg);
-        serve_client_request(conn, &header_pkg, sbuff->buffer);
+        handle_request(conn, &header_pkg, sbuff->buffer);
     }
 
     free_buffer(sbuff);
@@ -123,13 +118,15 @@ void *handle_connection(void *connection)
 
 static void run()
 {
+    pthread_attr_t attr;
+    if (create_threadattr(&attr) != SUCCESS) {
+        log_error("create_threadattr()", SYS_ERROR);
+        shutdown_server(EXIT_FAILURE, "Could not create threads");
+    }
     for (;;) {
         struct server_conn *conn = malloc(sizeof(struct server_conn));
         if (wait_connection(conn) == SUCCESS) {
             pthread_t thread;
-            pthread_attr_t attr;
-            pthread_attr_init(&attr);
-            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
             pthread_create(&thread, &attr, handle_connection, conn);
         }
     }

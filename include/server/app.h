@@ -13,16 +13,21 @@
 
 #include "lib/network.h"
 
+
+struct buffer_node *SBUFFER_POOL;
+
 /**
  * @brief Maximum connection in queue.
  */
-#define SERVER_QUEUE_SIZE 10
-
-
-#define MAIN_PKG_START_SIZE 512
+#define SERVER_QUEUE_SIZE 50
 
 /**
- * @brief Name of the server in 
+ * @brief Server buffer count.
+ */
+#define BUFFER_POOL_DEPTH 10
+
+/**
+ * @brief Name of the server in
  *        server-client communications.
  */
 #define SERVER_NAME "SERVER"

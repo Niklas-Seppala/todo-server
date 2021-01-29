@@ -1,13 +1,16 @@
 #if !defined(FLOW_H)
 #define FLOW_H
 #include "lib/network.h"
+#include <pthread.h>
 
-
-struct work_args {
-    SOCKET *sock;
-    struct header *header;
-    char *static_buff;
-};
+/**
+ * @brief Create thread attributes for detached
+ *        threads (will die immidiately after completion).
+ * 
+ * @param attr thread attribute struct
+ * @return int SUCCESS if ok, else ERROR
+ */
+int create_threadattr(pthread_attr_t *attr);
 
 /**
  * @brief Graceful shutdown with return code.

@@ -1,11 +1,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <pthread.h>
 
 #include "lib/common.h"
 #include "lib/protocol.h"
 #include "lib/network.h"
 #include "server/server_IO.h"
+#include "server/buffpool.h"
 #include "server/app.h"
 
 static void cleanup(void)
@@ -13,8 +15,9 @@ static void cleanup(void)
     log_info("Cleaning up...");
     safe_free((void **)&SERVER_ADDRESS);
 
-    close(SERVER_SOCK);
+    drain_pool(&SBUFFER_POOL);
 
+    close(SERVER_SOCK);
     fclose(IN_STREAM);
     fclose(OUT_STREAM);
     log_info("Cleanup complete.");
@@ -55,12 +58,16 @@ int send_code(SOCKET sock, int cmd)
     return send(sock, &h, HEADER_SIZE, 0);
 }
 
+int create_threadattr(pthread_attr_t *attr)
+{
+    if (pthread_attr_init(attr) < 0)
+        return ERROR;
 
-struct work_args {
-    SOCKET *sock;
-    struct header *header;
-    char *static_buff;
-};
+    if(pthread_attr_setdetachstate(attr, PTHREAD_CREATE_DETACHED))
+        return ERROR;
+
+    return SUCCESS;
+}
 
 
 int shutdown_server(const int r_code, const char *log)

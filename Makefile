@@ -11,7 +11,7 @@ LIB_SRC=./src/lib/
 LIB=$(LIB_SRC)common.c $(LIB_SRC)IO.c $(LIB_SRC)protocol.c $(LIB_SRC)network.c
 
 SERVER_SRC=./src/server/
-SERVER=$(SERVER_SRC)app.c $(SERVER_SRC)server.c $(SERVER_SRC)server_IO.c $(SERVER_SRC)todo.c $(SERVER_SRC)buffpool.c
+SERVER=$(SERVER_SRC)app.c $(SERVER_SRC)server.c $(SERVER_SRC)server_IO.c $(SERVER_SRC)todo.c $(SERVER_SRC)buffpool.c 
 
 LIB_OBS=common.o IO.o protocol.o network.o
 SERVER_OBJS=$(LIB_OBS) app.o server.o server_IO.o todo.o buffpool.o
