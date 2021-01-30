@@ -45,7 +45,7 @@ void log_warn(const char *warn)
     fprintf(LOG_STREAM, "%s - [WARN]: %s\n", t_str, warn);
 
     fflush(LOG_STREAM);
-    safe_free((void **)&t_str);
+    sfree(t_str);
 }
 
 void vflog_info(const char *fmt, ...)
@@ -60,7 +60,7 @@ void vflog_info(const char *fmt, ...)
     fputc('\n', LOG_STREAM);
     
     fflush(LOG_STREAM);
-    safe_free((void **)&t_str);
+    sfree(t_str);
     
     va_end(args);
 }
@@ -71,7 +71,7 @@ void log_info(const char *info)
     fprintf(LOG_STREAM, "%s - [INFO]: %s\n", t_str, info);
 
     fflush(LOG_STREAM);
-    safe_free((void **)&t_str);
+    sfree(t_str);
 }
 
 void error(const char *fname, const char *filename,
@@ -79,7 +79,7 @@ void error(const char *fname, const char *filename,
 {
     char *t_str = time_str();
     fprintf(LOG_STREAM, "%s - ", t_str);
-    safe_free((void **)&t_str);
+    sfree(t_str);
 
     // If compiled with DEBUG, give extra details about the
     // Source of the error.

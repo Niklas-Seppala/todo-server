@@ -23,7 +23,7 @@ void init_threads(void *(*thread_func)(void *))
 static void cleanup(void)
 {
     log_info("Cleaning up...");
-    safe_free((void **)&SERVER_ADDRESS);
+    sfree(SERVER_ADDRESS);
 
     close(SERVER_SOCK);
     fclose(IN_STREAM);
@@ -57,7 +57,7 @@ int init_connection(const char *port)
 
     SERVER_SOCK = server_socket(port, SERVER_QUEUE_SIZE, serv_addr);
     if (SERVER_SOCK < 0) {
-        safe_free((void **)&serv_addr);
+        sfree(serv_addr);
         log_error("Could not create valid server socket", 0);
         return ERROR;
     }

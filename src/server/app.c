@@ -78,8 +78,8 @@ static void thread_cleanup(void *arg)
         if (work->connection->sock > 0) {
             close(work->connection->sock);
         }
-        safe_free((void **)&work->connection);
-        safe_free((void **)&work);
+        sfree(work);
+        sfree(work->connection);
     }
 }
 
@@ -126,7 +126,7 @@ void *handle_connection(void *unused)
                 HEADER_SIZE
             );
 
-            pthread_testcancel();                   // cancel point
+            pthread_testcancel();                // cancellation point
             if (read_rc != SUCCESS) {
                 if (read_rc & READ_OVERFLOW) {
                     // The protocol dictates that communications
@@ -140,7 +140,7 @@ void *handle_connection(void *unused)
                 }
             } else {
                 header_from_nw(&header_pkg);
-                pthread_testcancel();               // cancel point
+                pthread_testcancel();            // cancellation point
                 handle_request(work->connection, &header_pkg, sbuffer);
             }
 

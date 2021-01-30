@@ -15,7 +15,7 @@ int handle_ADD(const SOCKET sock, const struct header *header,
 
     // TODO: Store main_pkg contents to database
 
-    safe_free((void **)&main_pkg);
+    sfree(main_pkg);
     return SUCCESS;
 }
 
