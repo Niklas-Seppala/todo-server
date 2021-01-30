@@ -1,27 +1,90 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <pthread.h>
 
-#include "server/todo.h"
+#include "server/IO.h"
 #include "server/app.h"
-#include "server/server.h"
-#include "server/server_IO.h"
-#include "lib/common.h"
+#include "server/todo.h"
+#include "server/threads.h"
+#include "server/network.h"
 
-void *handle_connection(void *unused);
+/**
+ * @brief Main server socket file descriptor.
+ */
+static SOCKET SERVER_SOCK = -1;
 
-#define EXECUTE_CLEANUP 1
+/**
+ * @brief Main server socket address.
+ */
+static struct sockaddr *SERVER_ADDRESS = NULL;
 
-SOCKET SERVER_SOCK = -1;
+// /**
+//  * @brief Queue data structure, where incoming client
+//  *        connections are pushed. Client handler threads will
+//  *        pick up these connections and handle them.
+//  */
+//  server_work_t *client_queue = NULL;
 
-struct sockaddr *SERVER_ADDRESS = NULL;
-static volatile int join_flag = 0;
-static serverwork_t *client_queue = NULL;
-static pthread_cond_t idle = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t idle_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
+/**
+ * @brief Cleans up all server resources.
+ */
+static void cleanup(void)
+{
+    log_info("Cleaning up...");
+    sfree(SERVER_ADDRESS);
 
+    close(SERVER_SOCK);
+    fclose(IN_STREAM);
+    fclose(OUT_STREAM);
+
+    shutdown_client_threads();
+
+    log_info("Cleanup complete.");
+    fclose(LOG_STREAM);
+}
+
+/**
+ * @brief Interrupt signal handler. Activates graceful
+ *        shutdown, and the exits program with
+ *        EXIT_SUCCESS code
+ * 
+ * @param sig SIGINT
+ */
+void sigint_handler(int sig)
+{
+    if (sig == SIGINT) {
+        log_warn("Received signal: [SIGINT] Server shutting down!");
+        vflog_info("Connections handled: %d", conn_num);
+        cleanup();
+        exit(EXIT_SUCCESS);
+    }
+}
+
+/**
+ * @brief Graceful shutdown with return code.
+ * 
+ * @param r_code program exit code.
+ * @param log optional final info log
+ * @return int program exit code.
+ */
+int shutdown_server(const int r_code, const char *log)
+{
+    if (log) {
+        log_warn(log);
+    }
+
+    vflog_info("Connections handled", "%ld", conn_num);
+    cleanup();
+    exit(r_code);
+}
+
+/**
+ * @brief Sets up all needed resources.
+ * 
+ * @param argc CLI arg count
+ * @param argv CLI args
+ * @return int SUCCESS for ok, else ERROR
+ */
 int start(int argc, const char **argv)
 {
     io_set_default_streams();
@@ -40,131 +103,34 @@ int start(int argc, const char **argv)
     log_info("Starting new session");
 
     const char *PORT = argv[1];
-    if (init_connection(PORT) != SUCCESS) {
+    if (init_connection(PORT, &SERVER_SOCK, &SERVER_ADDRESS, SERVER_QUEUE_SIZE) != SUCCESS) {
         io_setup_fail();
         shutdown_server(EXIT_FAILURE, "Aborting server setup!");
     }
-    io_setup_success();
-
-    init_threads(handle_connection);
+    io_setup_success(SERVER_ADDRESS);
 
     return SUCCESS;
 }
 
-int wait_connection(struct server_conn *conn)
-{
-    conn->addrsize = sizeof(struct sockaddr_storage);
-    conn->sock = accept(SERVER_SOCK,
-        (struct sockaddr *)&conn->addr, &conn->addrsize
-    );
-
-    if (conn->sock < 0) {
-        log_error(NULL, SYS_ERROR);
-        close(conn->sock);
-        return ERROR;
-    } else {
-        addr_to_readable((struct sockaddr *)&conn->addr,
-            &conn->readable
-        );
-    }
-
-    return SUCCESS;
-}
-
-static void thread_cleanup(void *arg)
-{
-    serverwork_t *work = (serverwork_t *)arg;
-    if (work) {
-        if (work->connection->sock > 0) {
-            close(work->connection->sock);
-        }
-        sfree(work);
-        sfree(work->connection);
-    }
-}
-
-void shutdown_workers()
-{
-    join_flag = 1;
-    pthread_cond_broadcast(&idle);
-}
-
-void *handle_connection(void *unused)
-{
-    char sbuffer[STATIC_BUFF_SIZE];
-    for (;;)
-    {
-        // All threads wait here, untill there
-        // main thread pushes work to queue and
-        // releases one thread at a time.
-
-        // In case of SIGINT, all threads are released,
-        // and they will all handle remaining work in queue
-        // and the exit.
-        pthread_mutex_lock(&idle_lock);
-        pthread_cond_wait(&idle, &idle_lock);
-        pthread_mutex_unlock(&idle_lock);
-
-        // thread safety
-        pthread_mutex_lock(&queue_lock);
-        serverwork_t *work = conn_dequeue(&client_queue);
-        pthread_mutex_unlock(&queue_lock);
-
-        if (work) {
-            pthread_cleanup_push(thread_cleanup, work);
-
-            vflog_info("Accepted client [%ld] at address: %s:%s",
-                work->id, work->connection->readable.ip_addr,
-                work->connection->readable.port
-            );
-
-            struct header header_pkg;
-            int read_rc = read_socket(work->connection->sock,
-                sbuffer,
-                &header_pkg,
-                STATIC_BUFF_SIZE,
-                HEADER_SIZE
-            );
-
-            pthread_testcancel();                // cancellation point
-            if (read_rc != SUCCESS) {
-                if (read_rc & READ_OVERFLOW) {
-                    // The protocol dictates that communications
-                    // begin with 16-byte size header package.
-                    // Here client sent rubish
-                    log_error("Package overflow while reading socket", 0);
-
-                    // Send error code to client
-                    send_code(work->connection->sock, INV);
-                    return NULL;
-                }
-            } else {
-                header_from_nw(&header_pkg);
-                pthread_testcancel();            // cancellation point
-                handle_request(work->connection, &header_pkg, sbuffer);
-            }
-
-            vflog_info("Client [%ld] handled.", work->id);
-            pthread_cleanup_pop(EXECUTE_CLEANUP);
-        }
-        // If flag is set, threads will exit and join cleanup
-        if (join_flag) {
-            return NULL;
-        }
-    }
-    return NULL;
-}
-
+/**
+ * @brief Runs the server main thread loop. Main thread
+ *        accepts client connections, and delegates them to
+ *        client handling threads.
+ */
 static void run()
 {
+
+    server_work_t *client_queue = NULL;
+    printf("%p\n", &client_queue);
+    
+    init_threads(delegate_conn, (void *)&client_queue);
+
     for (;;) {
         struct server_conn *conn = malloc(sizeof(struct server_conn));
-        if (wait_connection(conn) == SUCCESS) {
+        if (wait_connection(conn, SERVER_SOCK) == SUCCESS) {
 
             // Push work to queue
-            pthread_mutex_lock(&queue_lock);
             work_enqueue(&client_queue, conn, conn_num++);
-            pthread_mutex_unlock(&queue_lock);
 
             // Let one thread access the task queue
             pthread_cond_signal(&idle);

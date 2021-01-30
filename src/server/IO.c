@@ -1,11 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "server/app.h"
-#include "lib/common.h"
 #include "lib/network.h"
-#include "server/server_IO.h"
-#include "lib/IO.h"
+#include "server/app.h"
+#include "server/IO.h"
 
 int io_setup(void) {
     FILE *err_log = fopen("./logs/server.log", "a");
@@ -29,9 +27,9 @@ void io_setup_fail(void) {
         "Could not start the server, see log for errors");
 }
 
-void io_setup_success(void) {
+void io_setup_success(const struct sockaddr *server_addr) {
     struct readable_addr addr;
-    addr_to_readable(SERVER_ADDRESS, &addr);
+    addr_to_readable(server_addr, &addr);
     log_info("Configurations successful!");
     vflog_info("Server running on %s:%s", addr.ip_addr, addr.port);
 }

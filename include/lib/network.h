@@ -16,13 +16,6 @@
 #include <netdb.h>
 #include "lib/IO.h"
 
-typedef struct conn_queue {
-    struct conn_queue *next;
-    struct server_conn *connection;
-    uint64_t id;
-} serverwork_t;
-
-
 /**
  * @brief Socket should be socket
  */
@@ -72,13 +65,6 @@ struct server_conn {
     // String representation of address
     struct readable_addr readable;
 };
-
-
-void work_enqueue(serverwork_t **queue, struct server_conn *conn,
-    uint64_t id);
-
-serverwork_t *conn_dequeue(serverwork_t **queue);
-
 
 /**
  * @brief Starts to receive data to main buffer. Bytes are copied

@@ -8,38 +8,6 @@
 #include "lib/common.h"
 #include "lib/network.h"
 
-void work_enqueue(serverwork_t **queue, struct server_conn *conn,
-    uint64_t id)
-{
-    serverwork_t *new_node = malloc(sizeof(serverwork_t));
-    new_node->next = NULL;
-    new_node->connection = conn;
-    new_node->id = id;
-
-    if (*queue == NULL) {
-        *queue = new_node;
-        return;
-    }
-
-    serverwork_t *tail = *queue;
-    while (tail->next != NULL) {
-        tail = tail->next;
-    }
-
-    tail->next = new_node;
-}
-
-serverwork_t *conn_dequeue(serverwork_t **queue)
-{
-    if (*queue == NULL)
-        return NULL;
-
-    serverwork_t *popped = *queue;
-    *queue = (*queue)->next;
-
-    return popped;
-}
-
 struct sockaddr *generic_peer_addr(const SOCKET sock)
 {
     socklen_t size = sizeof(struct sockaddr_storage);

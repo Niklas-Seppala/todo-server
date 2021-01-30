@@ -1,15 +1,15 @@
 #include <stdlib.h>
 #include "server/todo.h"
 #include "server/app.h"
-#include "server/server.h"
 #include "lib/common.h"
+#include "server/network.h"
 
 int handle_ADD(const SOCKET sock, const struct header *header,
     char *sbuff, const size_t sbuff_size)
 {
     char *main_pkg = malloc(header->size);
 
-    send_code(sock, VAL);
+    send_code(sock, SERVER_NAME, VAL);
 
     read_socket(sock, sbuff, main_pkg, sbuff_size, header->size);
 

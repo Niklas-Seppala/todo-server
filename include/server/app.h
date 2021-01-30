@@ -12,6 +12,23 @@
 #define APP_H
 
 #include "lib/network.h"
+#include "lib/common.h"
+#include "server/queue.h"
+
+/**
+ * @brief 
+ */
+#define STATIC_BUFF_SIZE 512
+
+/**
+ * @brief 
+ */
+#define POOL_SIZE 15
+
+/**
+ * @brief 
+ */
+#define EXECUTE_CLEANUP 1
 
 /**
  * @brief Maximum connection in queue.
@@ -19,28 +36,11 @@
 #define SERVER_QUEUE_SIZE 50
 
 /**
- * @brief Server buffer count.
- */
-#define BUFFER_POOL_DEPTH 10
-
-/**
  * @brief Name of the server in
  *        server-client communications.
  */
 #define SERVER_NAME "SERVER"
 
-
-void shutdown_workers();
-
-/**
- * @brief Main server socket file descriptor.
- */
-SOCKET SERVER_SOCK;
-
-/**
- * @brief Main server socket address.
- */
-struct sockaddr *SERVER_ADDRESS;
 
 /**
  * @brief Rolling number of handled connections.

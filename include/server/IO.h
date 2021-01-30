@@ -13,6 +13,8 @@
 #define SERVER_IO
 
 #include "lib/IO.h"
+#include "sys/socket.h"
+#include "lib/common.h"
 
 /**
  * @brief Server setup failed, prints instruction
@@ -30,7 +32,7 @@ void io_set_default_streams(void);
  * @brief Server setup was success, print
  *        server address to LOG_STREAM
  */
-void io_setup_success(void);
+void io_setup_success(const struct sockaddr *server_addr);
 
 /**
  * @brief setup LOG_STREAM to defined
