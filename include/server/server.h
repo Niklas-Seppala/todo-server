@@ -1,16 +1,9 @@
-#if !defined(FLOW_H)
-#define FLOW_H
+#if !defined(SERVER_H)
+#define SERVER_H
 #include "lib/network.h"
-#include <pthread.h>
 
-/**
- * @brief Create thread attributes for detached
- *        threads (will die immidiately after completion).
- * 
- * @param attr thread attribute struct
- * @return int SUCCESS if ok, else ERROR
- */
-int create_threadattr(pthread_attr_t *attr);
+#define STATIC_BUFF_SIZE 512
+#define POOL_SIZE 30
 
 /**
  * @brief Graceful shutdown with return code.
@@ -30,6 +23,11 @@ int shutdown_server(const int r_code, const char *log);
  */
 int init_connection(const char *port);
 
+void init_threads(void *(*thread_func)(void *));
+
+
+int handle_request(const struct server_conn *conn,
+    const struct header *header_pkg, char *sbuff);
 
 /**
  * @brief Sends a reply code to socket.

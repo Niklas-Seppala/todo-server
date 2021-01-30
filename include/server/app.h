@@ -13,9 +13,6 @@
 
 #include "lib/network.h"
 
-
-struct buffer_node *SBUFFER_POOL;
-
 /**
  * @brief Maximum connection in queue.
  */
@@ -31,6 +28,9 @@ struct buffer_node *SBUFFER_POOL;
  *        server-client communications.
  */
 #define SERVER_NAME "SERVER"
+
+
+void shutdown_workers();
 
 /**
  * @brief Main server socket file descriptor.

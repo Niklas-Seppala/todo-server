@@ -6,23 +6,39 @@
 #include "lib/common.h"
 #include "lib/protocol.h"
 #include "lib/network.h"
+#include "server/server.h"
 #include "server/server_IO.h"
-#include "server/buffpool.h"
 #include "server/app.h"
+#include "server/todo.h"
+
+static pthread_t threadpool[POOL_SIZE];
+
+void init_threads(void *(*thread_func)(void *))
+{
+    for (int i = 0; i < POOL_SIZE; i++) {
+        pthread_create(&threadpool[i], NULL, thread_func, NULL);
+    }
+}
 
 static void cleanup(void)
 {
     log_info("Cleaning up...");
     safe_free((void **)&SERVER_ADDRESS);
 
-    drain_pool(&SBUFFER_POOL);
-
     close(SERVER_SOCK);
     fclose(IN_STREAM);
     fclose(OUT_STREAM);
+
+    shutdown_workers();
+    for (size_t i = 0; i < POOL_SIZE; i++) {
+        pthread_join(threadpool[i], NULL);
+    }
+
     log_info("Cleanup complete.");
     fclose(LOG_STREAM);
 }
+
+
 
 void sigint_handler(int sig)
 {
@@ -58,15 +74,21 @@ int send_code(SOCKET sock, int cmd)
     return send(sock, &h, HEADER_SIZE, 0);
 }
 
-int create_threadattr(pthread_attr_t *attr)
+int handle_request(const struct server_conn *conn,
+    const struct header *header_pkg, char *sbuff)
 {
-    if (pthread_attr_init(attr) < 0)
+    switch (header_pkg->cmd) {
+    case ADD:
+        return handle_ADD(conn->sock, header_pkg, sbuff, STATIC_BUFF_SIZE);
+    case LOG:
+        return handle_LOG(conn->sock, header_pkg);
+    case RMV:
+        return handle_RMV(conn->sock, header_pkg);
+    default:
+        log_error("Unsupported client command.", 0);
         return ERROR;
-
-    if(pthread_attr_setdetachstate(attr, PTHREAD_CREATE_DETACHED))
-        return ERROR;
-
-    return SUCCESS;
+        break;
+    }
 }
 
 

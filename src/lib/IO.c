@@ -38,11 +38,6 @@ void io_config(FILE *error, FILE *out, FILE *in)
     IN_STREAM = in;
 }
 
-void log_new_session(void)
-{
-    fprintf(LOG_STREAM, "\n");
-    log_info("Starting new session");
-}
 
 void log_warn(const char *warn)
 {

@@ -71,12 +71,6 @@ void log_info(const char *info);
 void vflog_info(const char *fmt, ...);
 
 /**
- * @brief Separates logging sessions with
- *        newline.
- */
-void log_new_session(void);
-
-/**
  * @brief prints warning message with timestamp to LOG_STREAM.
  * 
  * @param warn warning message
