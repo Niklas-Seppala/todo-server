@@ -11,12 +11,12 @@ LIB_SRC=./src/lib/
 LIB=$(LIB_SRC)common.c $(LIB_SRC)IO.c $(LIB_SRC)protocol.c $(LIB_SRC)network.c
 
 SERVER_SRC=./src/server/
-SERVER=$(SERVER_SRC)app.c $(SERVER_SRC)threads.c $(SERVER_SRC)todo.c $(SERVER_SRC)queue.c 
+SERVER=$(SERVER_SRC)app.c $(SERVER_SRC)threads.c $(SERVER_SRC)todo.c $(SERVER_SRC)queue.c
 
 LIB_OBS=common.o IO.o protocol.o network.o
 SERVER_OBJS=$(LIB_OBS) app.o threads.o server_IO.o todo.o queue.o server_network.o
 
-server_app: lib.o server_IO.o server_nw.o server.o 
+server_app: lib.o server_IO.o server_nw.o server.o
 	$(CC) $(SERVER_OBJS) -pthread -o app
 	mv ./*.o $(OBJ)
 	mv ./app $(OUT)
@@ -32,7 +32,7 @@ server_nw.o:
 
 
 server.o:
-	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) $(SERVER)
+	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) $(SERVER) 2> err.txt
 lib.o:
 	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) $(LIB)
 

@@ -1,7 +1,6 @@
 #include <stdlib.h>
+
 #include "server/todo.h"
-#include "server/app.h"
-#include "lib/common.h"
 #include "server/network.h"
 
 int handle_ADD(const SOCKET sock, const struct header *header,

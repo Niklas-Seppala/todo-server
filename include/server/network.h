@@ -1,10 +1,15 @@
 #ifndef SERVER_NETWORK_H
+#define SERVER_NETWORK_H
+
+#include <unistd.h>
+#include <stdlib.h>
+
+#include "lib/protocol.h"
 #include "lib/network.h"
 #include "lib/common.h"
-#include "lib/protocol.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include "server/todo.h"
+
+#define SERVER_NAME "SERVER"
+#define SERVER_QUEUE_SIZE 50
 
 /**
  * @brief Creates socket for the server, that listens
@@ -25,7 +30,6 @@ int init_connection(const char *port, SOCKET *sock,
  * @return int -1 for error, else sent amount of bytes.
  */
 int send_code(SOCKET sock, char *name, int cmd);
-
 
 /**
  * @brief Client message is received and parsed. This function

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "lib/network.h"
-#include "server/app.h"
 #include "server/IO.h"
 
 int io_setup(void) {

@@ -1,25 +1,10 @@
 #ifndef THREADS_H
 #define THREADS_H
-
 #include <pthread.h>
 
-/**
- * @brief 
- */
-#define STATIC_BUFF_SIZE 512
-/**
- * @brief 
- */
 #define EXECUTE_CLEANUP 1
-/**
- * @brief 
- */
+#define THREAD_READ_BUFF_SIZE 512
 #define POOL_SIZE 15
-
-
-pthread_cond_t idle;
-
-pthread_t threadpool[POOL_SIZE];
 
 /**
  * @brief Thread startup function pointer.
@@ -33,24 +18,19 @@ typedef void *(*thread_routine_t)(void *);
  * @param routine start function
  * @param arg routine arg
  */
-void init_threads(thread_routine_t routine, void *arg);
+int init_threads(int poolsize, thread_routine_t routine, void *arg);
 
 /**
  * @brief Calls for all client handling threads in the
  *        threadpool to finish work and die.
  */
-void shutdown_client_threads(void);
-
-void thread_cleanup(void *arg);
+void shutdown_client_threads();
 
 /**
- * @brief Client handler thread start routine. Threads run
- *        forever in a loop, handling client requestsm unless
- *        they are cancelled by invoking shutdown_client_threads().
+ * @brief 
  * 
- * @param args
- * @return void* NULL
+ * @param arg 
  */
-void *delegate_conn(void *args);
+void thread_cleanup(void *arg);
 
 #endif // !THREADS_H
