@@ -23,7 +23,8 @@ server_app: lib.o server_IO.o server_nw.o server.o
 
 debug_server:
 	valgrind $(OUT)app 5050
-
+debug_db:
+	$(CC) $(SRC)
 
 server_IO.o:
 	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) $(SERVER_SRC)IO.c -o server_IO.o
@@ -45,6 +46,17 @@ dev_client.o:
 	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) ./src/dev_client.c
 run_dev_client:
 	$(OUT)dev_client
+
+
+dev_db: lib.o dev_db.o
+	$(CC) $(LIB_OBS) dev_db.o database.o -lmysqlclient -o dev_db
+	mv ./*.o $(OBJ)
+	mv ./dev_db $(OUT)
+
+dev_db.o:
+	$(CC) $(OFLAGS) $(HEADERS) $(DEBUG) ./src/dev_db.c ./src/server/database.c
+run_dev_db:
+	$(OUT)dev_db
 
 clean:
 	rm $(OBJ)* $(OUT)* *.o
