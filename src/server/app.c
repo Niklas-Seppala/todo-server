@@ -6,6 +6,7 @@
 #include "server/queue.h"
 #include "server/threads.h"
 #include "server/network.h"
+#include "server/database.h"
 
 // SERVER STUFF
 static SOCKET SERVER_SOCK = -1;
@@ -75,7 +76,7 @@ int shutdown_server(const int r_code, const char *log)
  * @param argv CLI args
  * @return int SUCCESS for ok, else ERROR
  */
-int setup(int argc, const char **argv)
+int setup(int argc, const char **argv, db_info_t *db_info)
 {
     io_set_default_streams();
     signal(SIGINT, sigint_handler);
@@ -83,6 +84,36 @@ int setup(int argc, const char **argv)
     if (validate_args(argc, argv) != SUCCESS) {
         exit(EXIT_FAILURE);
     }
+
+    if (argc < 3) {
+        char user[DB_INFO_STR_LEN];
+        char host[DB_INFO_STR_LEN];
+        char pw[DB_INFO_STR_LEN];
+        char db_name[DB_INFO_STR_LEN];
+
+        fprintf(OUT_STREAM, "MySql database connection host: ");
+        fgets(host, DB_INFO_STR_LEN, IN_STREAM);
+        fprintf(OUT_STREAM, "MySQL database username: ");
+        fgets(user, DB_INFO_STR_LEN, IN_STREAM);
+        fprintf(OUT_STREAM, "MySQL password: ");
+        fgets(pw, DB_INFO_STR_LEN, IN_STREAM);
+        fprintf(OUT_STREAM, "MySQL database name: ");
+        fgets(db_name, DB_INFO_STR_LEN, IN_STREAM);
+
+        db_create_info(db_info, user, db_name, host, pw, 0);
+    } else if (argc > 5) {
+        const char *host    = argv[2];
+        const char *user    = argv[3];
+        const char *pw      = argv[4];
+        const char *db_name = argv[5];
+
+        db_create_info(db_info, user, db_name, host, pw, 0);
+    } else {
+        log_error("Database parameters invalid", 0);
+        return ERROR;
+    }
+    db_init(db_info);
+
 
     if (io_setup() != SUCCESS) {
         io_setup_fail();
@@ -206,9 +237,10 @@ static void run(void)
  * @param argc CLI argument count. MIN 2
  * @param argv Array of arguments
  */
-int main(int argc, char const *argv[])
+int main(int argc, char const **argv)
 {
-    setup(argc, argv);
+    db_info_t db_info;
+    setup(argc, argv, &db_info);
     fprintf(OUT_STREAM, "%s\n", "Server running..");
     run(); // Blocks indefinitely.
 }

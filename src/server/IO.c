@@ -35,7 +35,8 @@ void io_setup_success(const struct sockaddr *server_addr) {
 
 int validate_args(int argc, const char **argv) {
     if (argc < 2) {
-        fprintf(stdout, "%s\n\t %s <PORT>\n",
+        fprintf(stdout, "%s\n\t %s <SERVER PORT> <(DB_HOST)> \
+            <(DB_USER)> <(DB_PASSWORD)> <(DB_NAME)>\n",
             "Invalid parameter count", *argv);
         return ERROR;
     }
