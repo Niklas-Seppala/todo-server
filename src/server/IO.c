@@ -3,6 +3,7 @@
 
 #include "lib/network.h"
 #include "server/IO.h"
+#include "server/database.h"
 
 int io_setup(void) {
     FILE *err_log = fopen("./logs/server.log", "a");
@@ -35,10 +36,27 @@ void io_setup_success(const struct sockaddr *server_addr) {
 
 int validate_args(int argc, const char **argv) {
     if (argc < 2) {
-        fprintf(stdout, "%s\n\t %s <SERVER PORT> <(DB_HOST)> \
-            <(DB_USER)> <(DB_PASSWORD)> <(DB_NAME)>\n",
+        fprintf(stdout, "%s\n\t %s <SERVER PORT> <(DB_HOST)> <(DB_USER)> <(DB_PASSWORD)> <(DB_NAME)>\n",
             "Invalid parameter count", *argv);
         return ERROR;
     }
     return SUCCESS;
+}
+
+void query_db_info(db_info_t *info) {
+    char user[DB_INFO_STR_LEN];
+    char host[DB_INFO_STR_LEN];
+    char pw[DB_INFO_STR_LEN];
+    char db_name[DB_INFO_STR_LEN];
+
+    fprintf(OUT_STREAM, "MySql database connection host: ");
+    fgets(host, DB_INFO_STR_LEN, IN_STREAM);
+    fprintf(OUT_STREAM, "MySQL database username: ");
+    fgets(user, DB_INFO_STR_LEN, IN_STREAM);
+    fprintf(OUT_STREAM, "MySQL password: ");
+    fgets(pw, DB_INFO_STR_LEN, IN_STREAM);
+    fprintf(OUT_STREAM, "MySQL database name: ");
+    fgets(db_name, DB_INFO_STR_LEN, IN_STREAM);
+
+    db_create_info(info, user, db_name, host, pw, 0);
 }

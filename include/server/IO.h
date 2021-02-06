@@ -15,6 +15,14 @@
 #include "lib/IO.h"
 #include "sys/socket.h"
 #include "lib/common.h"
+#include "server/database.h"
+
+/**
+ * @brief Asks user for database connection info.
+ * 
+ * @param info database connection info struct
+ */
+void query_db_info(db_info_t *info);
 
 /**
  * @brief Server setup failed, prints instruction

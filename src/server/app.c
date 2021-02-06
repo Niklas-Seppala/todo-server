@@ -17,9 +17,6 @@ pthread_mutex_t idle_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t idle = PTHREAD_COND_INITIALIZER;
 int thread_exit_flag = 0;
 
-/**
- * @brief Cleans up all server resources.
- */
 static void cleanup(void)
 {
     log_info("Cleaning up...");
@@ -37,13 +34,6 @@ static void cleanup(void)
     fclose(LOG_STREAM);
 }
 
-/**
- * @brief Interrupt signal handler. Activates graceful
- *        shutdown, and the exits program with
- *        EXIT_SUCCESS code
- * 
- * @param sig SIGINT
- */
 void sigint_handler(int sig)
 {
     if (sig == SIGINT) {
@@ -53,13 +43,6 @@ void sigint_handler(int sig)
     }
 }
 
-/**
- * @brief Graceful shutdown with return code.
- * 
- * @param r_code program exit code.
- * @param log optional final info log
- * @return int program exit code.
- */
 int shutdown_server(const int r_code, const char *log)
 {
     if (log) {
@@ -69,13 +52,6 @@ int shutdown_server(const int r_code, const char *log)
     exit(r_code);
 }
 
-/**
- * @brief Sets up all needed resources.
- * 
- * @param argc CLI arg count
- * @param argv CLI args
- * @return int SUCCESS for ok, else ERROR
- */
 int setup(int argc, const char **argv, db_info_t *db_info)
 {
     io_set_default_streams();
@@ -86,34 +62,18 @@ int setup(int argc, const char **argv, db_info_t *db_info)
     }
 
     if (argc < 3) {
-        char user[DB_INFO_STR_LEN];
-        char host[DB_INFO_STR_LEN];
-        char pw[DB_INFO_STR_LEN];
-        char db_name[DB_INFO_STR_LEN];
-
-        fprintf(OUT_STREAM, "MySql database connection host: ");
-        fgets(host, DB_INFO_STR_LEN, IN_STREAM);
-        fprintf(OUT_STREAM, "MySQL database username: ");
-        fgets(user, DB_INFO_STR_LEN, IN_STREAM);
-        fprintf(OUT_STREAM, "MySQL password: ");
-        fgets(pw, DB_INFO_STR_LEN, IN_STREAM);
-        fprintf(OUT_STREAM, "MySQL database name: ");
-        fgets(db_name, DB_INFO_STR_LEN, IN_STREAM);
-
-        db_create_info(db_info, user, db_name, host, pw, 0);
+        query_db_info(db_info);
     } else if (argc > 5) {
         const char *host    = argv[2];
         const char *user    = argv[3];
         const char *pw      = argv[4];
         const char *db_name = argv[5];
-
-        db_create_info(db_info, user, db_name, host, pw, 0);
+        db_create_info(db_info, db_name, host, user, pw, 0);
     } else {
         log_error("Database parameters invalid", 0);
         return ERROR;
     }
     db_init(db_info);
-
 
     if (io_setup() != SUCCESS) {
         io_setup_fail();
@@ -124,7 +84,8 @@ int setup(int argc, const char **argv, db_info_t *db_info)
     log_info("Starting new session");
 
     const char *PORT = argv[1];
-    if (init_connection(PORT, &SERVER_SOCK, &SERVER_ADDRESS, SERVER_QUEUE_SIZE) != SUCCESS) {
+    if (init_connection(PORT, &SERVER_SOCK, &SERVER_ADDRESS,
+        SERVER_QUEUE_SIZE) != SUCCESS) {
         io_setup_fail();
         shutdown_server(EXIT_FAILURE, "Aborting server setup!");
     }
@@ -133,14 +94,6 @@ int setup(int argc, const char **argv, db_info_t *db_info)
     return SUCCESS;
 }
 
-/**
- * @brief Client handler thread start routine. Threads run
- *        forever in a loop, handling client requestsm unless
- *        they are cancelled by invoking shutdown_client_threads().
- * 
- * @param args
- * @return void* NULL
- */
 void *delegate_conn(void *work_queue)
 {
     server_work_t **client_queue = (server_work_t **)work_queue;
