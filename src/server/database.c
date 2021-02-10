@@ -8,7 +8,8 @@
 #include "lib/IO.h"
 #include "server/database.h"
 
-db_info_t *info;
+static db_info_t *info;
+
 int db_init(db_info_t *db_info)
 {
     if (mysql_library_init(0, NULL, NULL))
@@ -20,8 +21,10 @@ int db_init(db_info_t *db_info)
     return SUCCESS;
 }
 
-void db_create_info(db_info_t *db_info, const char *db_name,
-                    const char *host, const char *user, const char *pw,
+void db_create_info(db_info_t *db_info,
+                    const char *db_name,
+                    const char *host, const char *user,
+                    const char *pw,
                     const unsigned long flags)
 {
     strncpy(db_info->user, user, DB_INFO_STR_LEN);
@@ -36,8 +39,7 @@ MYSQL *db_open()
     MYSQL *db = mysql_init(NULL);
     mysql_real_connect(db, info->host, info->user, info->pw,
                        info->db_name, 0, NULL, info->flags);
-
-    if (!db)
+    if (db == NULL)
     {
         log_error(mysql_error(db), SYS_ERROR);
         mysql_close(db);
@@ -45,10 +47,11 @@ MYSQL *db_open()
     return db;
 }
 
+// TODO: Make this generic
 int db_insert_user(MYSQL *db, user_model_t *model)
 {
     char query[SQL_SIZE];
-    char escaped_uname[escape_len(USERNAME_LEN)];
+    char escaped_uname[escape_len(MODEL_USER_NAME_LEN)];
 
     mysql_real_escape_string(db, escaped_uname, model->username,
                              strlen(model->username));
@@ -64,16 +67,47 @@ int db_insert_user(MYSQL *db, user_model_t *model)
     return mysql_affected_rows(db);
 }
 
-void deserialize_users(MYSQL_RES *db_results,
-                       void *real_results,
-                       int fcount,
-                       char **fnames)
+void db_deserialize_tasks(MYSQL_RES *db_results,
+                          void *real_results,
+                          int fcount,
+                          char **fnames)
 {
-    user_model_node_t **head = (user_model_node_t **)real_results;
+    linked_node_t **head = (linked_node_t **)real_results;
     MYSQL_ROW row;
     while ((row = mysql_fetch_row(db_results)))
     {
-        user_model_node_t *node = calloc(1, sizeof(user_model_node_t));
+        linked_node_t *node = calloc(1, sizeof(linked_node_t));
+        task_model_t *model = calloc(1, sizeof(task_model_t));
+        for (int i = 0; i < fcount; i++)
+        {
+            if (strcmp(fnames[i], "id") == 0)
+            {
+                model->id = atoi(row[i]);
+            }
+            else if (strcmp(fnames[i], "user_id") == 0)
+            {
+                model->user_id = atoi(row[i]);
+            }
+            else if (strcmp(fnames[i], "content") == 0)
+            {
+                strncpy(model->content, row[i], MODEL_TASK_CNT_LEN);
+            }
+        }
+        node->value = model;
+        ll_link(head, node);
+    }
+}
+
+void db_deserialize_users(MYSQL_RES *db_results,
+                          void *real_results,
+                          int fcount,
+                          char **fnames)
+{
+    linked_node_t **head = (linked_node_t **)real_results;
+    MYSQL_ROW row;
+    while ((row = mysql_fetch_row(db_results)))
+    {
+        linked_node_t *node = calloc(1, sizeof(linked_node_t));
         user_model_t *model = calloc(1, sizeof(user_model_t));
         for (int i = 0; i < fcount; i++)
         {
@@ -83,13 +117,11 @@ void deserialize_users(MYSQL_RES *db_results,
             }
             else if (strcmp(fnames[i], "username") == 0)
             {
-                stpncpy(model->username, row[i], USERNAME_LEN);
+                stpncpy(model->username, row[i], MODEL_USER_NAME_LEN);
             }
         }
-        node->model = model;
-        node->next = NULL;
-
-        *head = (user_model_node_t *)link_node(head, node);
+        node->value = model;
+        ll_link(head, node);
     }
 }
 
@@ -123,7 +155,7 @@ int db_select(MYSQL *db,
     if (fcount > 0)
     {
         // Field names
-        char **fnames = malloc(sizeof(char *) * fcount); // multiply by field count
+        char **fnames = malloc(sizeof(char *) * fcount);
         for (int i = 0; i < fcount; i++)
             fnames[i] = mysql_fetch_field(result)->name;
 

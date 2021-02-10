@@ -7,17 +7,26 @@
 
 #define sfree(ptr) safe_free((void **)&ptr)
 
-typedef struct linked_node {
-    struct linked_node *next;
+typedef struct ll_node {
+    struct ll_node *next;
+    void *value;
 } linked_node_t;
 
 linked_node_t *ll_link(linked_node_t **list, linked_node_t *item);
+
+void ll_free(linked_node_t **list);
 
 /**
  * @brief 
  * 
  */
-#define link_node(list, item) \
+#define ll_free_list(list) ll_free((linked_node_t **)list)
+
+/**
+ * @brief 
+ * 
+ */
+#define ll_link_node(list, item) \
     ll_link((linked_node_t **)list, (linked_node_t *)item)
 
 /**
