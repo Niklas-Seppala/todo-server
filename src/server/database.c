@@ -125,12 +125,7 @@ void db_deserialize_users(MYSQL_RES *db_results,
     }
 }
 
-int db_select(MYSQL *db,
-              void (*deserialize_cb)(MYSQL_RES *, void *, int, char **),
-              void *results,
-              const char *sql,
-              const int argc,
-              ...)
+int db_delete(MYSQL *db, const char *sql, const int argc, ...)
 {
     char query[SQL_SIZE];
     char real_query[escape_len(SQL_SIZE)];
@@ -139,7 +134,108 @@ int db_select(MYSQL *db,
     vsnprintf(query, SQL_SIZE, sql, argv);
     mysql_real_escape_string(db, real_query, query, strlen(query));
 
-    if (mysql_real_query(db, query, strlen(query)))
+    if (mysql_real_query(db, real_query, strlen(real_query)))
+    {
+        log_error(mysql_error(db), 0);
+        return ERROR;
+    }
+    va_end(argv);
+    int affected_rows = mysql_affected_rows(db);
+    return affected_rows;
+}
+
+void replace_format_with_s(int argc, char *format_str)
+{
+    int counter = 0;
+    char curr;
+    while ((curr = *(format_str++)))
+    {
+        if (curr == '%')
+        {
+            curr = *(format_str);
+            if (curr == 'd' || curr == 's')
+            {
+                *format_str = 's';
+                if (++counter == argc)
+                    return;
+            }
+        }
+    }
+}
+
+void argv_to_strs(va_list argv, int argc, char *format_str,
+                  char escaped[][64], int mlen)
+{
+    int index = 0;
+    char *curr;
+    while (*(curr = format_str++))
+    {
+        if (*curr == '%')
+        {
+            curr = format_str++;
+            if (*curr == 'd')
+            {
+                snprintf(escaped[index++],
+                         mlen, "%d", va_arg(argv, int));
+                *curr = 's';
+            }
+            else if (*curr == 's')
+            {
+                snprintf(escaped[index++], mlen,
+                         "%s", va_arg(argv, char *));
+            }
+        }
+    }
+}
+
+void escape_sql_args(MYSQL *db, char *dest, size_t max_size,
+                     char *format, char arr[][64])
+{
+    char *curr;
+    while (*(curr = format++))
+    {
+        if (*curr == '%' && *(curr + 1) == 's')
+        {
+            format++;
+            char *next_str = *arr++;
+            size_t next_str_len = strlen(next_str);
+            int escaped_len = mysql_real_escape_string(db, dest,
+                                                       next_str,
+                                                       next_str_len);
+            dest += escaped_len;
+        }
+        else
+        {
+            strncpy(dest++, curr, 1);
+        }
+    }
+    *dest = 0;
+}
+
+int db_select(MYSQL *db,
+              void (*deserialize_cb)(MYSQL_RES *, void *, int, char **),
+              void *results,
+              char *sql,
+              const int argc,
+              ...)
+{
+    char escaped_sql[escape_len(SQL_SIZE)];
+    va_list argv;
+    va_start(argv, argc);
+
+    int sql_format_len = strlen(sql) + 1;
+    char *sql_cpy = calloc(sql_format_len, sizeof(char));
+    strncpy(sql_cpy, sql, sql_format_len);
+
+    // We need to convert variadic args to strings for
+    // SQL escape. Also change all occurences of %d in
+    // SQL format string to %s.
+    char escaped_args[argc][64];
+    argv_to_strs(argv, argc, sql_cpy, escaped_args, 64);
+    // Create a final escaped SQL string from variadic arguments.
+    escape_sql_args(db, escaped_sql, SQL_SIZE, sql_cpy, escaped_args);
+
+    if (mysql_real_query(db, escaped_sql, strlen(escaped_sql)))
     {
         log_error(mysql_error(db), 0);
         return ERROR;
@@ -162,8 +258,9 @@ int db_select(MYSQL *db,
         deserialize_cb(result, results, fcount, fnames);
         safe_free((void **)&fnames);
         mysql_free_result(result);
-        va_end(argv);
     }
+    sfree(sql_cpy);
+    va_end(argv);
     return fcount;
 }
 

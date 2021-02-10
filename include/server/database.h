@@ -130,7 +130,7 @@ int db_insert_user(MYSQL *db, user_model_t *model);
 int db_select(MYSQL *db,
               void(*deserialize_cb)(MYSQL_RES *, void *, int, char **),
               void *results,
-              const char *sql,
+              char *sql,
               const int argc,
               ...);
 
