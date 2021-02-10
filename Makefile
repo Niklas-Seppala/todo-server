@@ -49,7 +49,7 @@ run_dev_client:
 
 
 dev_db: lib.o dev_db.o
-	$(CC) $(LIB_OBS) dev_db.o database.o -lmysqlclient -o dev_db
+	$(CC) $(LIB_OBS) dev_db.o -lmysqlclient -o dev_db
 	mv ./*.o $(OBJ)
 	mv ./dev_db $(OUT)
 

@@ -7,6 +7,19 @@
 
 #define sfree(ptr) safe_free((void **)&ptr)
 
+typedef struct linked_node {
+    struct linked_node *next;
+} linked_node_t;
+
+linked_node_t *ll_link(linked_node_t **list, linked_node_t *item);
+
+/**
+ * @brief 
+ * 
+ */
+#define link_node(list, item) \
+    ll_link((linked_node_t **)list, (linked_node_t *)item)
+
 /**
  * @brief Prevents dangling pointers
  *        and double free.

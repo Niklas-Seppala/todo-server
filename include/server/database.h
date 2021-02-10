@@ -12,13 +12,32 @@
  */
 #define escape_len(src) src*2
 
+typedef struct task_model
+{
+    int id;
+    int user_id;
+    char content[2000]; // TODO: decide some length
+} task_model_t;
+
+
 /**
  * @brief 
  * 
  */
 typedef struct user_model {
+    int id;
     char username[15];
 } user_model_t;
+
+/**
+ * @brief 
+ * 
+ */
+typedef struct user_model_node {
+    struct user_model_node *next;
+    user_model_t *model;
+} user_model_node_t;
+
 
 /**
  * @brief 
@@ -93,5 +112,16 @@ int db_insert_user(MYSQL *db, user_model_t *model);
  */
 int db_select_user(MYSQL *db, int id, user_model_t *model);
 
+int db_select(MYSQL *db,
+              void(*deserialize_cb)(MYSQL_RES *, void *, int, char **),
+              void *results,
+              const char *sql,
+              const int argc,
+              ...);
+              
+void deserialize_users(MYSQL_RES *db_results,
+                       void *real_results,
+                       int fcount,
+                       char **fnames);
 
 #endif // DATABASE_H
