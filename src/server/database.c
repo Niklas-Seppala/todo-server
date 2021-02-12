@@ -118,23 +118,6 @@ void db_free_serialized_model(ser_model_t *model, int size)
     sfree(*model);
 }
 
-void serialize_task(task_model_t *task, char **fields)
-{
-    fields = calloc(MODEL_TASK_FCOUNT, sizeof(char *));
-
-    char *id = calloc(64, sizeof(char));
-    fields[0] = id;
-    snprintf(fields[0], 64, "%d", task->id);
-
-    char *user_id = calloc(64, sizeof(char));
-    fields[1] = user_id;
-    snprintf(fields[1], 64, "%d", task->user_id);
-
-    char *content = calloc(MODEL_TASK_CNT_LEN, sizeof(char));
-    fields[2] = content;
-    snprintf(fields[2], MODEL_TASK_CNT_LEN, "%s", task->content);
-}
-
 void serialize_task_model(task_model_t *task,
                           int *field, int len,
                           ser_model_t *serialized)
@@ -217,6 +200,30 @@ void argv_to_strs(va_list argv, int argc, char *format_str,
     }
 }
 
+void escape_model(MYSQL *db, char *dest, size_t max_size,
+                  char *format, ser_model_t model)
+{
+    char *curr;
+    while (*(curr = format++))
+    {
+        if (*curr == '%' && *(curr + 1) == 's')
+        {
+            format++;
+            char *next_str = *model++;
+            size_t next_str_len = strlen(next_str);
+            int escaped_len = mysql_real_escape_string(db, dest,
+                                                       next_str,
+                                                       next_str_len);
+            dest += escaped_len;
+        }
+        else
+        {
+            strncpy(dest++, curr, 1);
+        }
+    }
+    *dest = 0; // NULL terminate string
+}
+
 void escape_sql_args(MYSQL *db, char *dest, size_t max_size,
                      char *format, char arr[][64])
 {
@@ -276,6 +283,43 @@ int db_insert(MYSQL *db, char *sql, int argc, ...)
     return mysql_affected_rows(db);
 }
 
+int select_static(MYSQL *db,
+                  void (*deserialize_cb)(MYSQL_RES *, void *, int, char **),
+                  void *results,
+                  char *sql,
+                  const int argc,
+                  ser_model_t model)
+{
+    char escaped_sql[escape_len(SQL_SIZE)];
+    escape_model(db, escaped_sql, escape_len(SQL_SIZE), sql, model);
+    if (mysql_real_query(db, escaped_sql, strlen(escaped_sql)))
+    {
+        log_error(mysql_error(db), 0);
+        return ERROR;
+    }
+
+    MYSQL_RES *result = mysql_store_result(db);
+    if (result == NULL)
+    {
+        log_error(mysql_error(db), 0);
+        return ERROR;
+    }
+    int rows = mysql_num_rows(result);
+    int fcount = mysql_num_fields(result);
+    if (fcount > 0)
+    {
+        // Field names
+        char **fnames = malloc(sizeof(char *) * fcount);
+        for (int i = 0; i < fcount; i++)
+            fnames[i] = mysql_fetch_field(result)->name;
+
+        deserialize_cb(result, results, fcount, fnames);
+        safe_free((void **)&fnames);
+        mysql_free_result(result);
+    }
+    return rows;
+}
+
 int db_select(MYSQL *db,
               void (*deserialize_cb)(MYSQL_RES *, void *, int, char **),
               void *results,
@@ -324,7 +368,8 @@ int db_delete(MYSQL *db, const char *sql, const int argc, ...)
     char *escaped_sql = db_escape_varargs(db, sql, argc, argv);
     if (mysql_real_query(db, escaped_sql, strlen(escaped_sql)))
     {
-        log_error(mysql_error(db), 0);
+        // log_error(mysql_error(db), 0);
+        printf("%s\n", mysql_error(db));
         sfree(escaped_sql);
         return ERROR;
     }
@@ -332,6 +377,11 @@ int db_delete(MYSQL *db, const char *sql, const int argc, ...)
     int affected_rows = mysql_affected_rows(db);
     sfree(escaped_sql);
     return affected_rows;
+}
+
+void db_close(MYSQL *db)
+{
+    mysql_close(db);
 }
 
 void db_thread_quit()

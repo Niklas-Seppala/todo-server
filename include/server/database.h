@@ -11,18 +11,19 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 #include <mysql/mysql.h>
+#include "lib/common.h"
 
 // Size of the SQL statement
 #define SQL_SIZE 256
 
 // Doubles the size of escaped SQL statment
-#define escape_len(init_size) init_size*2
+#define escape_len(init_size) init_size * 2
+
+#define fcount_exclude_id(count) count - 1
 
 /*******************************************************************/
 /********************   Database model structs  ********************/
 /*******************************************************************/
-
-#define fcount_exclude_id(count) count-1
 
 /**
  * @brief Type for serialized model. Data model
@@ -31,8 +32,7 @@
  *        to heap and reference to those strings are
  *        held by char **, aka. ser_model_t.
  */
-typedef char ** ser_model_t;
-
+typedef char **ser_model_t;
 
 /********************  TASK MODEL  ********************/
 #define MODEL_TASK_FCOUNT 3
@@ -59,17 +59,18 @@ typedef struct task_model
 /**
  * @brief Holds data from user table
  */
-typedef struct user_model {
+typedef struct user_model
+{
     int id;
     char username[MODEL_USER_NAME_LEN];
 } user_model_t;
-
 
 #define DB_INFO_STR_LEN 32
 /**
  * @brief Holds data required for database connection creation.
  */
-typedef struct db_info {
+typedef struct db_info
+{
     char host[DB_INFO_STR_LEN];
     char user[DB_INFO_STR_LEN];
     char pw[DB_INFO_STR_LEN];
@@ -120,8 +121,8 @@ void serialize_task_model(task_model_t *task,
  * @param flags additional flags. @see mysql_real_connect()
  */
 void db_create_info(db_info_t *db_info, const char *db_name,
-    const char *host, const char *user, const char *pw,
-    const unsigned long flags);
+                    const char *host, const char *user, const char *pw,
+                    const unsigned long flags);
 
 /**
  * @brief Initializes application database.
@@ -166,6 +167,17 @@ MYSQL *db_open();
 int db_insert_user(MYSQL *db, user_model_t *model);
 
 /**
+ * @brief 
+ * 
+ * @param db 
+ * @param sql 
+ * @param argc 
+ * @param ... 
+ * @return int 
+ */
+int db_delete(MYSQL *db, const char *sql, const int argc, ...);
+
+/**
  * @brief Preforms a SELECT SQL statement to fetch data from database.
  *        Fetched data is aggregated to heap allocated linked list.
  *        Passed database connection MUST be initialized and opened.
@@ -181,12 +193,18 @@ int db_insert_user(MYSQL *db, user_model_t *model);
  * @return int row count
  */
 int db_select(MYSQL *db,
-              void(*deserialize_cb)(MYSQL_RES *, void *, int, char **),
+              void (*deserialize_cb)(MYSQL_RES *, void *, int, char **),
               void *results,
               char *sql,
               const int argc,
               ...);
 
+int select_static(MYSQL *db,
+                  void (*deserialize_cb)(MYSQL_RES *, void *, int, char **),
+                  void *results,
+                  char *sql,
+                  const int argc,
+                  ser_model_t model);
 
 /*******************************************************************/
 /**************   DEFAULT DESERIALIZATION CALLBACKS   **************/
@@ -201,9 +219,9 @@ int db_select(MYSQL *db,
  * @param fnames names of the fields in result set.
  */
 void db_deserialize_users(MYSQL_RES *db_results,
-                       void *real_results,
-                       int fcount,
-                       char **fnames);
+                          void *real_results,
+                          int fcount,
+                          char **fnames);
 
 /**
  * @brief Default deserializer callback for task data models.
@@ -214,8 +232,8 @@ void db_deserialize_users(MYSQL_RES *db_results,
  * @param fnames name of the fields in result set
  */
 void db_deserialize_tasks(MYSQL_RES *db_results,
-                       void *real_results,
-                       int fcount,
-                       char **fnames);
+                          void *real_results,
+                          int fcount,
+                          char **fnames);
 
 #endif // DATABASE_H
