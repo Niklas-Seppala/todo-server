@@ -22,8 +22,24 @@
 /********************   Database model structs  ********************/
 /*******************************************************************/
 
-#define MODEL_USER_NAME_LEN 15
-#define MODEL_TASK_CNT_LEN 2000
+#define fcount_exclude_id(count) count-1
+
+/**
+ * @brief Type for serialized model. Data model
+ *        fields get serialized to strings for
+ *        SQL escaping later. Strings are stored
+ *        to heap and reference to those strings are
+ *        held by char **, aka. ser_model_t.
+ */
+typedef char ** ser_model_t;
+
+
+/********************  TASK MODEL  ********************/
+#define MODEL_TASK_FCOUNT 3
+#define MODEL_TASK_CNT_LEN 512
+#define TASK_ID_FIELD 0
+#define TASK_USERID_FIELD 1
+#define TASK_CONTENT_FIELD 2
 
 /**
  * @brief Holds data from task table
@@ -35,6 +51,11 @@ typedef struct task_model
     char content[MODEL_TASK_CNT_LEN]; // TODO: decide some length
 } task_model_t;
 
+/********************  USER MODEL  ********************/
+#define MODEL_USER_FCOUNT 2
+#define MODEL_USER_NAME_LEN 15
+#define USER_ID_FIELD 0
+#define USER_USRNAME_FIELD 1
 /**
  * @brief Holds data from user table
  */
@@ -55,6 +76,38 @@ typedef struct db_info {
     char db_name[DB_INFO_STR_LEN];
     unsigned long flags;
 } db_info_t;
+
+/**
+ * @brief Frees the allocated serialized model.
+ * 
+ * @param model serialized model
+ * @param size serialized model count
+ */
+void db_free_serialized_model(ser_model_t *model, int size);
+
+/**
+ * @brief Serialize user model to ser_model_t.
+ * 
+ * @param user user mode to be serialized
+ * @param field what model fields to serialize
+ * @param len field count
+ * @param serialized result storage
+ */
+void serialize_user_model(user_model_t *user,
+                          int *field, int len,
+                          ser_model_t *serialized);
+
+/**
+ * @brief Serialize task model to ser_model_t.
+ * 
+ * @param task task model to be serialized.
+ * @param field what model fields to serialize
+ * @param len field count
+ * @param serialized result storage
+ */
+void serialize_task_model(task_model_t *task,
+                          int *field, int len,
+                          ser_model_t *serialized);
 
 /**
  * @brief Copies parameter strings to db_info_t struct.

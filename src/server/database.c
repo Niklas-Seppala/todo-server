@@ -47,26 +47,6 @@ MYSQL *db_open()
     return db;
 }
 
-// TODO: Make this generic
-int db_insert_user(MYSQL *db, user_model_t *model)
-{
-    char query[SQL_SIZE];
-    char escaped_uname[escape_len(MODEL_USER_NAME_LEN)];
-
-    mysql_real_escape_string(db, escaped_uname, model->username,
-                             strlen(model->username));
-
-    snprintf(query, SQL_SIZE, "INSERT INTO user (username) VALUES('%s')",
-             escaped_uname);
-
-    if (mysql_real_query(db, query, strlen(query)))
-    {
-        log_error(mysql_error(db), 0);
-        return ERROR;
-    }
-    return mysql_affected_rows(db);
-}
-
 void db_deserialize_tasks(MYSQL_RES *db_results,
                           void *real_results,
                           int fcount,
@@ -125,40 +105,89 @@ void db_deserialize_users(MYSQL_RES *db_results,
     }
 }
 
-int db_delete(MYSQL *db, const char *sql, const int argc, ...)
+void db_free_serialized_model(ser_model_t *model, int size)
 {
-    char query[SQL_SIZE];
-    char real_query[escape_len(SQL_SIZE)];
-    va_list argv;
-    va_start(argv, argc);
-    vsnprintf(query, SQL_SIZE, sql, argv);
-    mysql_real_escape_string(db, real_query, query, strlen(query));
-
-    if (mysql_real_query(db, real_query, strlen(real_query)))
+    char **temp = *model;
+    for (int i = 0; i < size; i++)
     {
-        log_error(mysql_error(db), 0);
-        return ERROR;
+        if (temp[i] != NULL)
+        {
+            free(temp[i]);
+        }
     }
-    va_end(argv);
-    int affected_rows = mysql_affected_rows(db);
-    return affected_rows;
+    sfree(*model);
 }
 
-void replace_format_with_s(int argc, char *format_str)
+void serialize_task(task_model_t *task, char **fields)
 {
-    int counter = 0;
-    char curr;
-    while ((curr = *(format_str++)))
+    fields = calloc(MODEL_TASK_FCOUNT, sizeof(char *));
+
+    char *id = calloc(64, sizeof(char));
+    fields[0] = id;
+    snprintf(fields[0], 64, "%d", task->id);
+
+    char *user_id = calloc(64, sizeof(char));
+    fields[1] = user_id;
+    snprintf(fields[1], 64, "%d", task->user_id);
+
+    char *content = calloc(MODEL_TASK_CNT_LEN, sizeof(char));
+    fields[2] = content;
+    snprintf(fields[2], MODEL_TASK_CNT_LEN, "%s", task->content);
+}
+
+void serialize_task_model(task_model_t *task,
+                          int *field, int len,
+                          ser_model_t *serialized)
+{
+    *serialized = calloc(MODEL_TASK_FCOUNT, sizeof(char *));
+    char *id, *userid, *content;
+    for (int i = 0; i < len; i++, field++)
     {
-        if (curr == '%')
+        switch (*field)
         {
-            curr = *(format_str);
-            if (curr == 'd' || curr == 's')
-            {
-                *format_str = 's';
-                if (++counter == argc)
-                    return;
-            }
+        case TASK_ID_FIELD:
+            id = calloc(64, sizeof(char));
+            snprintf(id, 64, "%d", task->id);
+            (*serialized)[USER_ID_FIELD] = id;
+            break;
+        case TASK_USERID_FIELD:
+            userid = calloc(64, sizeof(char));
+            snprintf(userid, 64, "%d", task->user_id);
+            (*serialized)[TASK_USERID_FIELD] = userid;
+            break;
+        case TASK_CONTENT_FIELD:
+            content = calloc(MODEL_TASK_CNT_LEN, sizeof(char));
+            snprintf(content, MODEL_TASK_CNT_LEN, "%s", task->content);
+            (*serialized)[TASK_CONTENT_FIELD] = content;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void serialize_user_model(user_model_t *user,
+                          int *field, int len,
+                          ser_model_t *fields)
+{
+    *fields = calloc(MODEL_USER_FCOUNT, sizeof(char *));
+    char *id, *username;
+    for (int i = 0; i < len; i++, field++)
+    {
+        switch (*field)
+        {
+        case USER_ID_FIELD:
+            id = calloc(64, sizeof(char));
+            snprintf(id, 64, "%d", user->id);
+            (*fields)[USER_ID_FIELD] = id;
+            break;
+        case USER_USRNAME_FIELD:
+            username = calloc(MODEL_USER_NAME_LEN, sizeof(char));
+            snprintf(username, MODEL_USER_NAME_LEN, "%s", user->username);
+            (*fields)[USER_USRNAME_FIELD] = username;
+            break;
+        default:
+            break;
         }
     }
 }
@@ -209,7 +238,42 @@ void escape_sql_args(MYSQL *db, char *dest, size_t max_size,
             strncpy(dest++, curr, 1);
         }
     }
-    *dest = 0;
+    *dest = 0; // NULL terminate string
+}
+
+char *db_escape_varargs(MYSQL *db, const char *sql,
+                        int argc, va_list argv)
+{
+    char *escaped_sql = calloc(1, escape_len(SQL_SIZE));
+    int sql_format_len = strlen(sql) + 1;
+    char sql_cpy[sql_format_len];
+    strncpy(sql_cpy, sql, sql_format_len);
+
+    // We need to convert variadic args to strings for
+    // SQL escape. Also change all occurences of %d in
+    // SQL format string to %s.
+    char escaped_args[argc][64];
+    argv_to_strs(argv, argc, sql_cpy, escaped_args, 64);
+    // Create a final escaped SQL string from variadic arguments.
+    escape_sql_args(db, escaped_sql, SQL_SIZE,
+                    sql_cpy, escaped_args);
+    return escaped_sql;
+}
+
+int db_insert(MYSQL *db, char *sql, int argc, ...)
+{
+    va_list argv;
+    va_start(argv, argc);
+    char *escaped_sql = db_escape_varargs(db, sql, argc, argv);
+    if (mysql_real_query(db, escaped_sql, strlen(escaped_sql)))
+    {
+        log_error(mysql_error(db), 0);
+        sfree(escaped_sql);
+        return ERROR;
+    }
+    sfree(escaped_sql);
+    va_end(argv);
+    return mysql_affected_rows(db);
 }
 
 int db_select(MYSQL *db,
@@ -219,25 +283,13 @@ int db_select(MYSQL *db,
               const int argc,
               ...)
 {
-    char escaped_sql[escape_len(SQL_SIZE)];
     va_list argv;
     va_start(argv, argc);
-
-    int sql_format_len = strlen(sql) + 1;
-    char *sql_cpy = calloc(sql_format_len, sizeof(char));
-    strncpy(sql_cpy, sql, sql_format_len);
-
-    // We need to convert variadic args to strings for
-    // SQL escape. Also change all occurences of %d in
-    // SQL format string to %s.
-    char escaped_args[argc][64];
-    argv_to_strs(argv, argc, sql_cpy, escaped_args, 64);
-    // Create a final escaped SQL string from variadic arguments.
-    escape_sql_args(db, escaped_sql, SQL_SIZE, sql_cpy, escaped_args);
-
+    char *escaped_sql = db_escape_varargs(db, sql, argc, argv);
     if (mysql_real_query(db, escaped_sql, strlen(escaped_sql)))
     {
         log_error(mysql_error(db), 0);
+        sfree(escaped_sql);
         return ERROR;
     }
 
@@ -245,6 +297,7 @@ int db_select(MYSQL *db,
     if (result == NULL)
     {
         log_error(mysql_error(db), 0);
+        sfree(escaped_sql);
         return ERROR;
     }
     int fcount = mysql_num_fields(result);
@@ -259,9 +312,26 @@ int db_select(MYSQL *db,
         safe_free((void **)&fnames);
         mysql_free_result(result);
     }
-    sfree(sql_cpy);
+    sfree(escaped_sql);
     va_end(argv);
     return fcount;
+}
+
+int db_delete(MYSQL *db, const char *sql, const int argc, ...)
+{
+    va_list argv;
+    va_start(argv, argc);
+    char *escaped_sql = db_escape_varargs(db, sql, argc, argv);
+    if (mysql_real_query(db, escaped_sql, strlen(escaped_sql)))
+    {
+        log_error(mysql_error(db), 0);
+        sfree(escaped_sql);
+        return ERROR;
+    }
+    va_end(argv);
+    int affected_rows = mysql_affected_rows(db);
+    sfree(escaped_sql);
+    return affected_rows;
 }
 
 void db_thread_quit()
